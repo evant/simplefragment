@@ -18,10 +18,12 @@ import static me.tatarka.simplefragment.sample.SimpleFragmentChildWithBackStack.
  * Created by evan on 2/2/15.
  */
 public class SimpleFragmentWithBackStack extends SimpleFragment<SimpleFragment.ViewHolder> {
+    SimpleFragmentContainer container;
+    
     @Override
     public void onCreate(Context context, @Nullable Bundle state) {
-        final SimpleFragmentContainer container = getSimpleFragmentContainer();
-
+        container = SimpleFragmentContainer.getInstance(this);
+        
         container.findOrAdd(
                 new SimpleFragmentIntent<>(SimpleFragmentChildWithBackStack.class)
                         .putArg(ARG_VIEW_ID, R.id.child_fragment1), R.id.child_fragment1);

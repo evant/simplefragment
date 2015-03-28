@@ -2,7 +2,6 @@ package me.tatarka.simplefragment;
 
 import android.content.Context;
 import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -24,7 +23,9 @@ import me.tatarka.simplefragment.util.ResUtil;
  * A container where you can directly add and remove fragments to the view hierarchy. It also
  * supports back stack-like features.
  */
-public class SimpleFragmentContainer {
+public class SimpleFragmentContainer implements SimpleFragmentContainerManager.Value {
+    public static final SimpleFragmentContainerManager.Key<SimpleFragmentContainer> KEY = new SimpleFragmentContainerManager.Key<>("me.tatarka.simplefragment.SimpleFragmentContainer");
+
     private SimpleFragmentManager fm;
     private SimpleFragmentKey parentKey;
     private View rootView;
@@ -32,15 +33,88 @@ public class SimpleFragmentContainer {
     private List<LayoutKey> attachedKeys;
     private Map<LayoutKey, SimpleFragment> fragmentsPendingAttach;
     private SimpleFragmentBackStack backStack;
+    
+    public static SimpleFragmentContainer getInstance(SimpleFragmentContainerManagerProvider provider) {
+        return getInstance(provider.getSimpleFragmentContainerManager());
+    }
 
-    public SimpleFragmentContainer(SimpleFragmentManager fm, @Nullable SimpleFragmentKey parentKey) {
-        this.fm = fm;
-        this.parentKey = parentKey;
+    public static SimpleFragmentContainer getInstance(SimpleFragmentContainerManager cm) {
+        SimpleFragmentContainer container = cm.get(KEY);
+        if (container == null) {
+            container = new SimpleFragmentContainer();
+            cm.put(KEY, container);
+        }
+        return container;
+    }
+
+    private SimpleFragmentContainer() {
         this.attachedKeys = new ArrayList<>();
         this.fragmentsPendingAttach = new HashMap<>();
+    }
+
+    @Override
+    public void onAttachScope(SimpleFragmentManager fm, @Nullable SimpleFragmentKey parentKey) {
+        this.fm = fm;
+        this.parentKey = parentKey;
         this.backStack = SimpleFragmentBackStack.getInstance(fm);
         this.backStack.addListener(parentKey, new BackStackListener());
     }
+
+    @Override
+    public void onAttachView(LayoutInflater layoutInflater, View rootView) {
+        this.layoutInflater = layoutInflater;
+        this.rootView = rootView;
+
+        // Restore previously attached fragments.
+        for (LayoutKey key : attachedKeys) {
+            SimpleFragment childFragment = fm.find(key);
+            attachFragment(rootView, layoutInflater, childFragment);
+        }
+
+        // View is ready, we can createView all pending fragments now.
+        for (Map.Entry<LayoutKey, SimpleFragment> entry : fragmentsPendingAttach.entrySet()) {
+            attachFragment(rootView, layoutInflater, entry.getValue());
+            attachedKeys.add(entry.getKey());
+        }
+        fragmentsPendingAttach.clear();
+    }
+
+    @Override
+    public void onClearView() {
+        for (LayoutKey key : attachedKeys) {
+            ViewGroup parentView = (ViewGroup) rootView.findViewById(key.getViewId());
+            SimpleFragment fragment = fm.find(key);
+            View view = fm.destroyView(fragment);
+            parentView.removeView(view);
+        }
+        layoutInflater = null;
+        rootView = null;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeTypedList(attachedKeys);
+    }
+
+    private SimpleFragmentContainer(Parcel in) {
+        this.attachedKeys = new ArrayList<>();
+        in.readTypedList(this.attachedKeys, LayoutKey.CREATOR);
+    }
+
+    public static final Creator<SimpleFragmentContainer> CREATOR = new Creator<SimpleFragmentContainer>() {
+        public SimpleFragmentContainer createFromParcel(Parcel source) {
+            return new SimpleFragmentContainer(source);
+        }
+
+        public SimpleFragmentContainer[] newArray(int size) {
+            return new SimpleFragmentContainer[size];
+        }
+    };
 
     /**
      * Creates a {@code SimpleFragment} and attaches it to the view with the given id.
@@ -192,47 +266,6 @@ public class SimpleFragmentContainer {
     }
 
     /**
-     * Set the root view for fragments to be attached to by finding a child view's id. Any fragments
-     * added before calling this will be immediately attached.
-     *
-     * @param rootView       The view to createView to.
-     * @param layoutInflater The layout inflater used when crating the fragment's views.
-     */
-    public void setRootView(View rootView, LayoutInflater layoutInflater) {
-        this.layoutInflater = layoutInflater;
-        this.rootView = rootView;
-
-        // Restore previously attached fragments.
-        for (LayoutKey key : attachedKeys) {
-            SimpleFragment childFragment = fm.find(key);
-            attachFragment(rootView, layoutInflater, childFragment);
-        }
-
-        // View is ready, we can createView all pending fragments now.
-        for (Map.Entry<LayoutKey, SimpleFragment> entry : fragmentsPendingAttach.entrySet()) {
-            attachFragment(rootView, layoutInflater, entry.getValue());
-            attachedKeys.add(entry.getKey());
-        }
-        fragmentsPendingAttach.clear();
-    }
-
-    /**
-     * Clears the root view. This will also destroy the views of any fragments attached to this
-     * container. Should be called if the container is being retained but the views are being
-     * destroyed.
-     */
-    public void clearRootView() {
-        for (LayoutKey key : attachedKeys) {
-            ViewGroup parentView = (ViewGroup) rootView.findViewById(key.getViewId());
-            SimpleFragment fragment = fm.find(key);
-            View view = fm.destroyView(fragment);
-            parentView.removeView(view);
-        }
-        layoutInflater = null;
-        rootView = null;
-    }
-
-    /**
      * Attaches the fragment to the rootView given it's path and adds it to the attached keys if
      * successful. If the root view hasn't been set yet, this attachment will be delayed until the
      * root view is set.
@@ -265,15 +298,6 @@ public class SimpleFragmentContainer {
         parent.addView(view);
     }
 
-    public Parcelable saveState() {
-        return new State(attachedKeys);
-    }
-
-    public void restoreState(Parcelable parcelable) {
-        State state = (State) parcelable;
-        attachedKeys = state.attachedKeys;
-    }
-
     public Context getContext() {
         return fm.getContext();
     }
@@ -291,39 +315,6 @@ public class SimpleFragmentContainer {
             }
             maybeAttachFragment(rootView, layoutInflater, newFragment);
         }
-    }
-
-    private static class State implements Parcelable {
-        private List<LayoutKey> attachedKeys;
-
-        State(List<LayoutKey> attachedKeys) {
-            this.attachedKeys = attachedKeys;
-        }
-
-        @Override
-        public int describeContents() {
-            return 0;
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            dest.writeTypedList(attachedKeys);
-        }
-
-        private State(Parcel in) {
-            this.attachedKeys = new ArrayList<>();
-            in.readTypedList(this.attachedKeys, LayoutKey.CREATOR);
-        }
-
-        public static final Creator<State> CREATOR = new Creator<State>() {
-            public State createFromParcel(Parcel source) {
-                return new State(source);
-            }
-
-            public State[] newArray(int size) {
-                return new State[size];
-            }
-        };
     }
 
     private static boolean equals(Object a, Object b) {

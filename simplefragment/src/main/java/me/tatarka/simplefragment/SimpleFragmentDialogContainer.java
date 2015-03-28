@@ -4,7 +4,6 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -22,18 +21,64 @@ import me.tatarka.simplefragment.key.TagKey;
 /**
  * Created by evan on 3/22/15.
  */
-public class SimpleFragmentDialogContainer {
+public class SimpleFragmentDialogContainer implements SimpleFragmentContainerManager.Value {
+    public static final SimpleFragmentContainerManager.Key<SimpleFragmentDialogContainer> KEY = new SimpleFragmentContainerManager.Key<>("me.tatarka.simplefragment.SimpleFragmentDialogContainer");
+
     private SimpleFragmentManager fm;
     private SimpleFragmentKey parentKey;
     private LayoutInflater layoutInflater;
     private List<TagKey> attachedKeys;
     private Map<TagKey, SimpleDialogFragment> fragmentsPendingAttach;
+    
+    public static SimpleFragmentDialogContainer getInstance(SimpleFragmentContainerManagerProvider provider) {
+        return getInstance(provider.getSimpleFragmentContainerManager());
+    }
 
-    public SimpleFragmentDialogContainer(SimpleFragmentManager fm, @Nullable SimpleFragmentKey parentKey) {
-        this.fm = fm;
-        this.parentKey = parentKey;
+    public static SimpleFragmentDialogContainer getInstance(SimpleFragmentContainerManager cm) {
+        SimpleFragmentDialogContainer container = cm.get(KEY);
+        if (container == null) {
+            container = new SimpleFragmentDialogContainer();
+            cm.put(KEY, container);
+        }
+        return container;
+    }
+
+    public SimpleFragmentDialogContainer() {
         this.attachedKeys = new ArrayList<>();
         this.fragmentsPendingAttach = new HashMap<>();
+    }
+
+    @Override
+    public void onAttachScope(SimpleFragmentManager fm, @Nullable SimpleFragmentKey parentKey) {
+        this.fm = fm;
+        this.parentKey = parentKey;
+    }
+
+    @Override
+    public void onAttachView(LayoutInflater layoutInflater, View rootView) {
+        this.layoutInflater = layoutInflater;
+
+        // Restore previously attached fragments.
+        for (TagKey key : attachedKeys) {
+            SimpleDialogFragment fragment = (SimpleDialogFragment) fm.find(key);
+            attachDialog(layoutInflater, fragment);
+        }
+
+        // View is ready, we can createView all pending fragments now.
+        for (Map.Entry<TagKey, SimpleDialogFragment> entry : fragmentsPendingAttach.entrySet()) {
+            attachDialog(layoutInflater, entry.getValue());
+            attachedKeys.add(entry.getKey());
+        }
+        fragmentsPendingAttach.clear();
+    }
+
+    @Override
+    public void onClearView() {
+        for (TagKey key : attachedKeys) {
+            SimpleDialogFragment fragment = (SimpleDialogFragment) fm.find(key);
+            fm.destroyView(fragment);
+        }
+        this.layoutInflater = null;
     }
 
     public <T extends SimpleDialogFragment> T add(SimpleFragmentIntent<T> intent, @NonNull String tag) {
@@ -52,16 +97,16 @@ public class SimpleFragmentDialogContainer {
         }
         return add(intent, tag);
     }
-    
+
     public void remove(SimpleDialogFragment<?> fragment) {
         TagKey key = (TagKey) fragment.getKey();
         attachedKeys.remove(key);
         if (fragment.getView() != null) {
             fm.destroyView(fragment);
         }
-        fm.destroy(fragment); 
+        fm.destroy(fragment);
     }
-    
+
     public SimpleDialogFragment<?> find(String tag) {
         if (tag == null) {
             return null;
@@ -73,38 +118,13 @@ public class SimpleFragmentDialogContainer {
         }
         return null;
     }
-    
+
     public List<SimpleDialogFragment<?>> getFragments() {
         List<SimpleDialogFragment<?>> fragments = new ArrayList<>(attachedKeys.size());
         for (TagKey key : attachedKeys) {
             fragments.add((SimpleDialogFragment<?>) fm.find(key));
         }
         return Collections.unmodifiableList(fragments);
-    }
-
-    public void setRootView(LayoutInflater layoutInflater) {
-        this.layoutInflater = layoutInflater;
-        
-        // Restore previously attached fragments.
-        for (TagKey key : attachedKeys) {
-            SimpleDialogFragment fragment = (SimpleDialogFragment) fm.find(key);
-            attachDialog(layoutInflater, fragment);
-        }
-        
-        // View is ready, we can createView all pending fragments now.
-        for (Map.Entry<TagKey, SimpleDialogFragment> entry : fragmentsPendingAttach.entrySet()) {
-            attachDialog(layoutInflater, entry.getValue());
-            attachedKeys.add(entry.getKey());
-        }
-        fragmentsPendingAttach.clear();
-    }
-
-    public void clearRootView() {
-        for (TagKey key : attachedKeys) {
-            SimpleDialogFragment fragment = (SimpleDialogFragment) fm.find(key);
-            fm.destroyView(fragment);
-        }
-        this.layoutInflater = null;
     }
 
     private void maybeAttachDialog(LayoutInflater layoutInflater, SimpleDialogFragment fragment) {
@@ -131,49 +151,32 @@ public class SimpleFragmentDialogContainer {
         }
     }
 
-    public Parcelable saveState() {
-        return new State(attachedKeys);
-    }
-
-    public void restoreState(Parcelable parcelable) {
-        State state = (State) parcelable;
-        attachedKeys = state.attachedKeys;
-    }
-
     public Context getContext() {
         return fm.getContext();
     }
 
-    private static class State implements Parcelable {
-        private List<TagKey> attachedKeys;
-
-        State(List<TagKey> attachedKeys) {
-            this.attachedKeys = attachedKeys;
-        }
-
-        @Override
-        public int describeContents() {
-            return 0;
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            dest.writeTypedList(attachedKeys);
-        }
-
-        private State(Parcel in) {
-            this.attachedKeys = new ArrayList<>();
-            in.readTypedList(this.attachedKeys, TagKey.CREATOR);
-        }
-
-        public static final Creator<State> CREATOR = new Creator<State>() {
-            public State createFromParcel(Parcel source) {
-                return new State(source);
-            }
-
-            public State[] newArray(int size) {
-                return new State[size];
-            }
-        };
+    @Override
+    public int describeContents() {
+        return 0;
     }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeTypedList(attachedKeys);
+    }
+
+    private SimpleFragmentDialogContainer(Parcel in) {
+        this.attachedKeys = new ArrayList<>();
+        in.readTypedList(this.attachedKeys, TagKey.CREATOR);
+    }
+
+    public static final Creator<SimpleFragmentDialogContainer> CREATOR = new Creator<SimpleFragmentDialogContainer>() {
+        public SimpleFragmentDialogContainer createFromParcel(Parcel source) {
+            return new SimpleFragmentDialogContainer(source);
+        }
+
+        public SimpleFragmentDialogContainer[] newArray(int size) {
+            return new SimpleFragmentDialogContainer[size];
+        }
+    };
 }

@@ -9,15 +9,21 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import me.tatarka.simplefragment.SimpleFragment;
+import me.tatarka.simplefragment.SimpleFragmentContainer;
+import me.tatarka.simplefragment.SimpleFragmentDialogContainer;
 import me.tatarka.simplefragment.SimpleFragmentIntent;
 
 /**
  * Created by evan on 3/21/15.
  */
 public class SimpleFragmentDialogs extends SimpleFragment<SimpleFragment.ViewHolder> {
+    SimpleFragmentDialogContainer container;
+    
     @Override
     public void onCreate(final Context context, @Nullable Bundle state) {
-        SimpleFragmentDialog dialogFragment = (SimpleFragmentDialog) getSimpleFragmentDialogContainer().find("dialog");
+        container = SimpleFragmentDialogContainer.getInstance(this);
+        
+        SimpleFragmentDialog dialogFragment = (SimpleFragmentDialog) container.find("dialog");
         if (dialogFragment != null) {
             setDialogListener(dialogFragment);
         }
@@ -32,7 +38,7 @@ public class SimpleFragmentDialogs extends SimpleFragment<SimpleFragment.ViewHol
                 view.findViewById(R.id.show_dialog).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        final SimpleFragmentDialog dialogFragment = getSimpleFragmentDialogContainer().add(new SimpleFragmentIntent<>(SimpleFragmentDialog.class), "dialog");
+                        final SimpleFragmentDialog dialogFragment = container.add(new SimpleFragmentIntent<>(SimpleFragmentDialog.class), "dialog");
                         setDialogListener(dialogFragment);
                         dialogFragment.show();
                     }

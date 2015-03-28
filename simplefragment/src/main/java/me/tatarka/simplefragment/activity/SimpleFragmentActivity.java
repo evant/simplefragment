@@ -8,12 +8,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 
 import me.tatarka.simplefragment.SimpleFragmentContainer;
+import me.tatarka.simplefragment.SimpleFragmentContainerManager;
+import me.tatarka.simplefragment.SimpleFragmentContainerManagerProvider;
 import me.tatarka.simplefragment.SimpleFragmentManager;
+import me.tatarka.simplefragment.SimpleFragmentManagerProvider;
 
 /**
  * Created by evan on 3/7/15.
  */
-public class SimpleFragmentActivity extends Activity {
+public class SimpleFragmentActivity extends Activity implements SimpleFragmentManagerProvider, SimpleFragmentContainerManagerProvider {
     private SimpleFragmentActivityHelper helper = new SimpleFragmentActivityHelper(new SimpleFragmentActivityHelper.ActivityInfo() {
         @Override
         public Context getContext() {
@@ -80,11 +83,13 @@ public class SimpleFragmentActivity extends Activity {
         }
     }
 
+    @Override
     public SimpleFragmentManager getSimpleFragmentManager() {
         return helper.getSimpleFragmentManager();
     }
 
-    public SimpleFragmentContainer getSimpleFragmentContainer() {
-        return helper.getSimpleFragmentContainer();
+    @Override
+    public SimpleFragmentContainerManager getSimpleFragmentContainerManager() {
+        return helper.getSimpleFragmentContainerManager();
     }
 }

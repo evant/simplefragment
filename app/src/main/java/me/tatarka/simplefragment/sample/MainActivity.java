@@ -17,7 +17,7 @@ public class MainActivity extends SimpleFragmentActionBarActivity {
         setContentView(R.layout.activity_main);
 
         ViewPager viewPager = (ViewPager) findViewById(R.id.view_pager);
-        viewPager.setAdapter(new Adapter(getSimpleFragmentManager()));
+        viewPager.setAdapter(new Adapter());
     }
 
     @Override
@@ -43,8 +43,8 @@ public class MainActivity extends SimpleFragmentActionBarActivity {
     }
 
     private class Adapter extends SimpleFragmentPagerAdapter {
-        public Adapter(SimpleFragmentManager fm) {
-            super(fm, getLayoutInflater());
+        public Adapter() {
+            super(MainActivity.this, getLayoutInflater());
         }
 
         @Override

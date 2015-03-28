@@ -12,7 +12,7 @@ import me.tatarka.simplefragment.activity.SimpleFragmentActivityHelper;
 /**
  * Created by evan on 2/2/15.
  */
-public class SimpleFragmentActionBarActivity extends ActionBarActivity {
+public class SimpleFragmentActionBarActivity extends ActionBarActivity implements SimpleFragmentManagerProvider, SimpleFragmentContainerManagerProvider {
     private SimpleFragmentActivityHelper helper = new SimpleFragmentActivityHelper(new SimpleFragmentActivityHelper.ActivityInfo() {
         @Override
         public Context getContext() {
@@ -37,8 +37,9 @@ public class SimpleFragmentActionBarActivity extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        // Must call before super.onCreate() because the super implementation triggers onCreateView()
         helper.onCreate(savedInstanceState);
+        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -85,11 +86,13 @@ public class SimpleFragmentActionBarActivity extends ActionBarActivity {
         }
     }
 
+    @Override
     public SimpleFragmentManager getSimpleFragmentManager() {
         return helper.getSimpleFragmentManager();
     }
     
-    public SimpleFragmentContainer getSimpleFragmentContainer() {
-        return helper.getSimpleFragmentContainer();
+    @Override
+    public SimpleFragmentContainerManager getSimpleFragmentContainerManager() {
+        return helper.getSimpleFragmentContainerManager();
     }
 }

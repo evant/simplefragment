@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,13 +17,12 @@ import me.tatarka.simplefragment.key.SimpleFragmentKey;
 /**
  * Created by evan on 1/11/15.
  */
-public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> {
+public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> implements SimpleFragmentManagerProvider, SimpleFragmentContainerManagerProvider {
     private V viewHolder;
     private View view;
     private State state = new State();
     private SimpleFragmentManager fm;
-    private SimpleFragmentContainer container;
-    private SimpleFragmentDialogContainer dialogContainer;
+    private SimpleFragmentContainerManager cm;
     private List<LifecycleListener<V>> lifecycleListeners = new ArrayList<>();
 
     public abstract void onCreate(Context context, @Nullable Bundle state);
@@ -46,8 +44,7 @@ public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> {
 
     final void create(SimpleFragmentManager fm, SimpleFragmentIntent intent, SimpleFragmentKey key) {
         this.fm = fm;
-        this.container = new SimpleFragmentContainer(fm, key);
-        this.dialogContainer = new SimpleFragmentDialogContainer(fm, key);
+        this.cm = new SimpleFragmentContainerManager(fm, key);
         state.intent = intent;
         state.key = key;
         onCreate(fm.getContext().getApplicationContext(), this.state.state);
@@ -65,8 +62,7 @@ public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> {
         for (LifecycleListener<V> listener : lifecycleListeners) {
             listener.onViewCreated(viewHolder, view);
         }
-        container.setRootView(view, inflater);
-        dialogContainer.setRootView(inflater);
+        cm.setView(inflater, view);
         onViewHolderCreated(viewHolder, view);
         return view;
     }
@@ -78,15 +74,13 @@ public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> {
         onDestroyViewHolder();
         viewHolder = null;
         view = null;
-        container.clearRootView();
-        dialogContainer.clearRootView();
+        cm.clearView();
     }
 
     final Parcelable saveState(Context context) {
         state.state = new Bundle();
         onSave(context, state.state);
-        state.containerState = container.saveState();
-        state.dialogContainerState = dialogContainer.saveState();
+        state.cmState = cm.saveState();
         return state;
     }
 
@@ -94,10 +88,8 @@ public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> {
         this.state = (State) parcelable;
         this.state.state.setClassLoader(getClass().getClassLoader());
         this.fm = fm;
-        this.container = new SimpleFragmentContainer(fm, state.key);
-        this.container.restoreState(state.containerState);
-        this.dialogContainer = new SimpleFragmentDialogContainer(fm, state.key);
-        this.dialogContainer.restoreState(state.dialogContainerState);
+        this.cm = new SimpleFragmentContainerManager(fm, state.key);
+        this.cm.restoreState(state.cmState);
         this.onCreate(fm.getContext().getApplicationContext(), state.state);
     }
 
@@ -134,16 +126,14 @@ public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> {
         return state.key;
     }
 
+    @Override
     public SimpleFragmentManager getSimpleFragmentManager() {
         return fm;
     }
-
-    public SimpleFragmentContainer getSimpleFragmentContainer() {
-        return container;
-    }
     
-    public SimpleFragmentDialogContainer getSimpleFragmentDialogContainer() {
-        return dialogContainer;
+    @Override
+    public SimpleFragmentContainerManager getSimpleFragmentContainerManager() {
+        return cm;
     }
 
     public SimpleFragmentIntent getIntent() {
@@ -193,8 +183,7 @@ public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> {
         private SimpleFragmentIntent intent;
         private Bundle state;
         private SimpleFragmentKey key;
-        private Parcelable containerState;
-        private Parcelable dialogContainerState;
+        private Parcelable cmState;
 
         State() {
         }
@@ -209,16 +198,14 @@ public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> {
             dest.writeParcelable(this.intent, 0);
             dest.writeBundle(state);
             dest.writeParcelable(key, flags);
-            dest.writeParcelable(containerState, flags);
-            dest.writeParcelable(dialogContainerState, flags);
+            dest.writeParcelable(cmState, flags);
         }
 
         State(Parcel in) {
             this.intent = in.readParcelable(SimpleFragmentIntent.class.getClassLoader());
             this.state = in.readBundle();
             this.key = in.readParcelable(SimpleFragmentKey.class.getClassLoader());
-            this.containerState = in.readParcelable(SimpleFragmentContainer.class.getClassLoader());
-            this.dialogContainerState = in.readParcelable(SimpleFragmentDialogContainer.class.getClassLoader());
+            this.cmState = in.readParcelable(SimpleFragmentContainerManager.class.getClassLoader());
         }
 
         public static final Parcelable.Creator<State> CREATOR = new Parcelable.Creator<State>() {

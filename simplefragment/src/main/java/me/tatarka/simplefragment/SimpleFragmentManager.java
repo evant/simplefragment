@@ -151,7 +151,7 @@ public class SimpleFragmentManager {
 
         // To support <fragment> tags in nested layouts, we need a custom inflater.
         LayoutInflater fragmentInflater = layoutInflater.cloneInContext(context);
-        fragmentInflater.setFactory(new SimpleFragmentLayoutInflaterFactory(fragment.getSimpleFragmentContainer()));
+        fragmentInflater.setFactory(new SimpleFragmentLayoutInflaterFactory(SimpleFragmentContainer.getInstance(fragment)));
 
         return fragment.createView(fragmentInflater, parentView);
     }
