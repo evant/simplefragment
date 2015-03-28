@@ -120,7 +120,7 @@ public class SimpleFragmentManager {
             throw new IllegalArgumentException("SimpleFragment cannot be null.");
         }
         if (fragment.getView() != null) {
-            destroyView(fragment, null);
+            destroyView(fragment);
         }
         if (!fragments.remove(fragment)) {
             throw new IllegalArgumentException("Attempting to remove fragment that was not added: '" + fragment + "'");
@@ -159,22 +159,19 @@ public class SimpleFragmentManager {
     /**
      * Destroys the {@code SimpleFragment}'s view. If it has already been destroyed is a no-op.
      *
-     * @param fragment   The The {@code SimpleFragment} to destroyView.
-     * @param parentView An optional parent view. If this is not null then the fragment will
-     *                   automatically be removed from that parent. Otherwise, you are responsible
-     *                   for removing it yourself.
+     * @param fragment The The {@code SimpleFragment} to destroyView.
+     * @return The view being destroyed so you can remove it from the layout hierarchy if required,
+     * or null if the fragment's view has already been destroyed.
      */
-    public void destroyView(SimpleFragment<?> fragment, @Nullable ViewGroup parentView) {
+    public View destroyView(SimpleFragment<?> fragment) {
         if (fragment == null) {
             throw new IllegalArgumentException("SimpleFragment cannot be null.");
         }
         View view = fragment.getView();
         if (view != null) {
-            if (parentView != null) {
-                parentView.removeView(view);
-            }
             fragment.destroyView();
         }
+        return view;
     }
 
     public Parcelable saveState() {
@@ -221,7 +218,7 @@ public class SimpleFragmentManager {
     public void clearConfigurationState() {
         for (SimpleFragment fragment : fragments) {
             if (fragment.getView() != null) {
-                destroyView(fragment, null);
+                destroyView(fragment);
             }
         }
         context = null;

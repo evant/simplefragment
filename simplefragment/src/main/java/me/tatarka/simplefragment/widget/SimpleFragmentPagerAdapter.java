@@ -58,7 +58,8 @@ public abstract class SimpleFragmentPagerAdapter extends PagerAdapter {
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
         SimpleFragment fragment = (SimpleFragment) object;
-        fm.destroyView(fragment, container);
+        View view = fm.destroyView(fragment);
+        container.removeView(view);
     }
 
     @Override

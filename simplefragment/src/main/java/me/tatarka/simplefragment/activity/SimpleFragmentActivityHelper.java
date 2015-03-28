@@ -41,17 +41,17 @@ public class SimpleFragmentActivityHelper {
             if (lastNonConfigInstance != null) {
                 NonConfigInstance instance = (NonConfigInstance) lastNonConfigInstance;
                 fm = instance.fm;
+                fm.restoreConfigurationState(context);
                 container = instance.container;
                 dialogContainer = instance.dialogContainer;
-                fm.restoreConfigurationState(context);
             } else {
-                fm = new SimpleFragmentManager(context);
                 State state = savedInstanceState.getParcelable(STATE);
+                fm = new SimpleFragmentManager(context);
+                fm.restoreState(state.fmState);
                 container = new SimpleFragmentContainer(fm, null);
                 container.restoreState(state.containerState);
                 dialogContainer = new SimpleFragmentDialogContainer(fm, null);
                 dialogContainer.restoreState(state.dialogContainerState);
-                fm.restoreState(state.fmState);
             }
         }
 

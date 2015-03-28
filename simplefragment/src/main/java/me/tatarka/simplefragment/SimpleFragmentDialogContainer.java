@@ -57,7 +57,7 @@ public class SimpleFragmentDialogContainer {
         TagKey key = (TagKey) fragment.getKey();
         attachedKeys.remove(key);
         if (fragment.getView() != null) {
-            fm.destroyView(fragment, null);
+            fm.destroyView(fragment);
         }
         fm.destroy(fragment); 
     }
@@ -102,7 +102,7 @@ public class SimpleFragmentDialogContainer {
     public void clearRootView() {
         for (TagKey key : attachedKeys) {
             SimpleDialogFragment fragment = (SimpleDialogFragment) fm.find(key);
-            fm.destroyView(fragment, null);
+            fm.destroyView(fragment);
         }
         this.layoutInflater = null;
     }

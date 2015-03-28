@@ -93,7 +93,7 @@ public class SimpleFragmentManagerTest {
         SimpleFragmentIntent<TestSimpleFragment> intent = new SimpleFragmentIntent<>(TestSimpleFragment.class);
         TestSimpleFragment fragment = manager.create(intent, new TestKey());
         manager.createView(fragment, layoutInflater, view);
-        manager.destroyView(fragment, null);
+        manager.destroyView(fragment);
 
         assertThat(fragment.getView()).isNull();
     }

@@ -88,7 +88,8 @@ public class SimpleFragmentContainer {
         if (!backStack.remove(key)) {
             if (fragment.getView() != null) {
                 ViewGroup parentView = (ViewGroup) fragment.getView().getParent();
-                fm.destroyView(fragment, parentView);
+                View view = fm.destroyView(fragment);
+                parentView.removeView(view);
             }
             fm.destroy(fragment);
         }
@@ -224,7 +225,8 @@ public class SimpleFragmentContainer {
         for (LayoutKey key : attachedKeys) {
             ViewGroup parentView = (ViewGroup) rootView.findViewById(key.getViewId());
             SimpleFragment fragment = fm.find(key);
-            fm.destroyView(fragment, parentView);
+            View view = fm.destroyView(fragment);
+            parentView.removeView(view);
         }
         layoutInflater = null;
         rootView = null;
@@ -281,6 +283,12 @@ public class SimpleFragmentContainer {
         public void onReplace(SimpleFragment oldFragment, SimpleFragment newFragment) {
             LayoutKey oldKey = (LayoutKey) oldFragment.getKey();
             attachedKeys.remove(oldKey);
+            if (rootView != null) {
+                int viewId = oldKey.getViewId();
+                ViewGroup parentView = (ViewGroup) rootView.findViewById(viewId);
+                View view = fm.destroyView(oldFragment);
+                parentView.removeView(view);
+            }
             maybeAttachFragment(rootView, layoutInflater, newFragment);
         }
     }

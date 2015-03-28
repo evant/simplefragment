@@ -71,8 +71,6 @@ public class SimpleFragmentBackStack implements SimpleFragmentManager.ExtraValue
         int index;
         if (previousFragment != null) {
             index = ((LayoutKey) previousFragment.getKey()).getIndex() + 1;
-            ViewGroup parent = (ViewGroup) previousFragment.getView().getParent();
-            fm.destroyView(previousFragment, parent);
         } else {
             index = 0;
         }
@@ -118,7 +116,6 @@ public class SimpleFragmentBackStack implements SimpleFragmentManager.ExtraValue
     public boolean remove(LayoutKey key) {
         if (backStack.remove(key)) {
             SimpleFragment fragment = fm.find(key);
-            fm.destroy(fragment);
             SimpleFragment previousFragment = findPreviousFragment(key);
             if (previousFragment != null) {
                 LayoutKey previousFragmentKey = (LayoutKey) previousFragment.getKey();
@@ -128,6 +125,7 @@ public class SimpleFragmentBackStack implements SimpleFragmentManager.ExtraValue
                 }
                 listener.onReplace(fragment, previousFragment);
             }
+            fm.destroy(fragment);
             return true;
         } else {
             return false;

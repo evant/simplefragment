@@ -157,9 +157,10 @@ public class SimpleFragmentContainerTest {
         Parcelable managerState = fm.saveState();
         Parcelable containerState = container.saveState();
         fm = new SimpleFragmentManager(context);
-        container = new SimpleFragmentContainer(fm, null);
         fm.restoreState(managerState);
+        container = new SimpleFragmentContainer(fm, null);
         container.restoreState(containerState);
+        container.setRootView(rootView, layoutInflater);
 
         assertThat(container.find(0)).isEqualTo(fragment2);
     }
@@ -174,5 +175,40 @@ public class SimpleFragmentContainerTest {
         container.pop();
 
         assertThat(container.find(0)).isSameAs(fragment1);
+    }
+    
+    @Test
+    public void testPopConfigurationChange() {
+        SimpleFragmentManager fm = new SimpleFragmentManager(context);
+        SimpleFragmentContainer container = new SimpleFragmentContainer(fm, null);
+        container.setRootView(rootView, layoutInflater);
+        TestSimpleFragment fragment1 = container.add(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        TestSimpleFragment fragment2 = container.push(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        container.clearRootView();
+        fm.clearConfigurationState();
+        fm.restoreConfigurationState(context);
+        container.setRootView(rootView, layoutInflater);
+        container.pop();
+
+        assertThat(container.find(0)).isSameAs(fragment1);
+    }
+    
+    @Test
+    public void testPopSaveState() {
+        SimpleFragmentManager fm = new SimpleFragmentManager(context);
+        SimpleFragmentContainer container = new SimpleFragmentContainer(fm, null);
+        container.setRootView(rootView, layoutInflater);
+        TestSimpleFragment fragment1 = container.add(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        TestSimpleFragment fragment2 = container.push(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        Parcelable managerState = fm.saveState();
+        Parcelable containerState = container.saveState();
+        fm = new SimpleFragmentManager(context);
+        fm.restoreState(managerState);
+        container = new SimpleFragmentContainer(fm, null);
+        container.restoreState(containerState);
+        container.setRootView(rootView, layoutInflater);
+        container.pop();
+
+        assertThat(container.find(0)).isEqualTo(fragment1);
     }
 }
