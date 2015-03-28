@@ -166,6 +166,8 @@ public class SimpleFragmentContainerTest {
         TestSimpleFragment fragment2 = container.push(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
         Parcelable fmState = fm.saveState();
         Parcelable cmState = cm.saveState();
+        fm.clearConfigurationState();
+        cm.clearView();
         fm = new SimpleFragmentManager(context);
         fm.restoreState(fmState);
         cm = new SimpleFragmentContainerManager(fm, null);
@@ -215,6 +217,8 @@ public class SimpleFragmentContainerTest {
         TestSimpleFragment fragment2 = container.push(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
         Parcelable fmState = fm.saveState();
         Parcelable cmState = cm.saveState();
+        fm.clearConfigurationState();
+        cm.clearView();
         fm = new SimpleFragmentManager(context);
         fm.restoreState(fmState);
         cm = new SimpleFragmentContainerManager(fm, null);

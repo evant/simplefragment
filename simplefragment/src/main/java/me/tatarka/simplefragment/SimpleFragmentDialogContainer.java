@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Parcel;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 
@@ -29,7 +28,7 @@ public class SimpleFragmentDialogContainer implements SimpleFragmentContainerMan
     private LayoutInflater layoutInflater;
     private List<TagKey> attachedKeys;
     private Map<TagKey, SimpleDialogFragment> fragmentsPendingAttach;
-    
+
     public static SimpleFragmentDialogContainer getInstance(SimpleFragmentContainerManagerProvider provider) {
         return getInstance(provider.getSimpleFragmentContainerManager());
     }
@@ -40,6 +39,7 @@ public class SimpleFragmentDialogContainer implements SimpleFragmentContainerMan
             container = new SimpleFragmentDialogContainer();
             cm.put(KEY, container);
         }
+        container.setManager(cm);
         return container;
     }
 
@@ -48,10 +48,9 @@ public class SimpleFragmentDialogContainer implements SimpleFragmentContainerMan
         this.fragmentsPendingAttach = new HashMap<>();
     }
 
-    @Override
-    public void onAttachScope(SimpleFragmentManager fm, @Nullable SimpleFragmentKey parentKey) {
-        this.fm = fm;
-        this.parentKey = parentKey;
+    private void setManager(SimpleFragmentContainerManager cm) {
+        this.fm = cm.getSimpleFragmentManager();
+        this.parentKey = cm.getParentKey();
     }
 
     @Override

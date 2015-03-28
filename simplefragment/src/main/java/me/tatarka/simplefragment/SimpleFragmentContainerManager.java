@@ -32,6 +32,11 @@ public class SimpleFragmentContainerManager implements SimpleFragmentManagerProv
     public SimpleFragmentManager getSimpleFragmentManager() {
         return fm;
     }
+
+    @Nullable
+    public SimpleFragmentKey getParentKey() {
+        return parentKey;
+    }
     
     public void setView(LayoutInflater layoutInflater, View rootView) {
         this.rootView = rootView; 
@@ -66,7 +71,6 @@ public class SimpleFragmentContainerManager implements SimpleFragmentManagerProv
             Key<?> key = new Key<>(entry.getKey());
             Value value = (Value) entry.getValue();
             containers.put(key, value);
-            value.onAttachScope(fm, parentKey);
             if (layoutInflater != null) {
                 value.onAttachView(layoutInflater, rootView);
             }
@@ -75,7 +79,6 @@ public class SimpleFragmentContainerManager implements SimpleFragmentManagerProv
     
     public <T extends Value> void put(Key<T> key, T value) {
         containers.put(key, value);
-        value.onAttachScope(fm, parentKey);
         if (layoutInflater != null) {
             value.onAttachView(layoutInflater, rootView);
         }
@@ -151,8 +154,6 @@ public class SimpleFragmentContainerManager implements SimpleFragmentManagerProv
     }
 
     public interface Value extends Parcelable {
-        void onAttachScope(SimpleFragmentManager fm, @Nullable SimpleFragmentKey parentKey);
-
         void onAttachView(LayoutInflater layoutInflater, View rootView);
 
         void onClearView();

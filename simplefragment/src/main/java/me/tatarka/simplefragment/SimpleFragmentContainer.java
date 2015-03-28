@@ -44,6 +44,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
             container = new SimpleFragmentContainer();
             cm.put(KEY, container);
         }
+        container.setManager(cm);
         return container;
     }
 
@@ -51,11 +52,10 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
         this.attachedKeys = new ArrayList<>();
         this.fragmentsPendingAttach = new HashMap<>();
     }
-
-    @Override
-    public void onAttachScope(SimpleFragmentManager fm, @Nullable SimpleFragmentKey parentKey) {
-        this.fm = fm;
-        this.parentKey = parentKey;
+    
+    private void setManager(SimpleFragmentContainerManager cm) {
+        this.fm = cm.getSimpleFragmentManager();
+        this.parentKey = cm.getParentKey();
         this.backStack = SimpleFragmentBackStack.getInstance(fm);
         this.backStack.addListener(parentKey, new BackStackListener());
     }
