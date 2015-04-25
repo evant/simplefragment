@@ -85,21 +85,25 @@ public class SimpleFragmentAppCompatActivity extends Activity implements SimpleF
     @Override
     public void setContentView(@LayoutRes int layoutResID) {
         getAppCompatDelegate().setContentView(layoutResID);
+        getSimpleFragmentDelegate().onSetContentView();
     }
 
     @Override
     public void setContentView(View view) {
         getAppCompatDelegate().setContentView(view);
+        getSimpleFragmentDelegate().onSetContentView();
     }
 
     @Override
     public void setContentView(View view, ViewGroup.LayoutParams params) {
         getAppCompatDelegate().setContentView(view, params);
+        getSimpleFragmentDelegate().onSetContentView();
     }
 
     @Override
     public void addContentView(View view, ViewGroup.LayoutParams params) {
         getAppCompatDelegate().addContentView(view, params);
+        getSimpleFragmentDelegate().onSetContentView();
     }
 
     @Override

@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.LayoutInflaterCompat;
 import android.support.v4.view.LayoutInflaterFactory;
 import android.util.AttributeSet;
@@ -33,6 +34,7 @@ public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, Si
     private SimpleFragmentContainerManager cm;
     private SimpleFragmentViewInflater viewInflater;
     private LayoutInflaterFactory delegateFactory;
+    private boolean isRootViewSet = false;
 
     public static SimpleFragmentDelegate create(Activity activity) {
         return new SimpleFragmentDelegate(activity);
@@ -49,7 +51,13 @@ public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, Si
             fm = new SimpleFragmentManager(context);
             cm = new SimpleFragmentContainerManager(fm, null);
         } else {
-            Object lastNonConfigInstance = activity.getLastNonConfigurationInstance();
+            Object lastNonConfigInstance;
+            if (activity instanceof FragmentActivity) {
+                lastNonConfigInstance = ((FragmentActivity) activity).getLastCustomNonConfigurationInstance();
+            } else {
+                lastNonConfigInstance = activity.getLastNonConfigurationInstance();
+            }
+
             if (lastNonConfigInstance != null) {
                 NonConfigInstance instance = (NonConfigInstance) lastNonConfigInstance;
                 fm = instance.fm;
@@ -63,9 +71,14 @@ public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, Si
                 cm.restoreState(state.cmState);
             }
         }
+    }
 
-        View rootView = activity.getWindow().getDecorView();
-        cm.setView(rootView);
+    public void onSetContentView() {
+        if (!isRootViewSet) {
+            isRootViewSet = true;
+            View rootView = activity.findViewById(android.R.id.content);
+            cm.setView(rootView);
+        }
     }
 
     public void onDestroy() {

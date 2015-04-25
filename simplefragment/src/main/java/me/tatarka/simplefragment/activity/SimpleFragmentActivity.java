@@ -2,6 +2,8 @@ package me.tatarka.simplefragment.activity;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.View;
+import android.view.ViewGroup;
 
 import me.tatarka.simplefragment.SimpleFragmentContainerManager;
 import me.tatarka.simplefragment.SimpleFragmentContainerManagerProvider;
@@ -19,6 +21,30 @@ public class SimpleFragmentActivity extends Activity implements SimpleFragmentMa
         getSimpleFragmentDelegate().installViewFactory(null);
         super.onCreate(savedInstanceState);
         getSimpleFragmentDelegate().onCreate(savedInstanceState);
+    }
+
+    @Override
+    public void setContentView(int layoutResID) {
+        super.setContentView(layoutResID);
+        getSimpleFragmentDelegate().onSetContentView();
+    }
+
+    @Override
+    public void setContentView(View view) {
+        super.setContentView(view);
+        getSimpleFragmentDelegate().onSetContentView();
+    }
+
+    @Override
+    public void setContentView(View view, ViewGroup.LayoutParams params) {
+        super.setContentView(view, params);
+        getSimpleFragmentDelegate().onSetContentView();
+    }
+
+    @Override
+    public void addContentView(View view, ViewGroup.LayoutParams params) {
+        super.addContentView(view, params);
+        getSimpleFragmentDelegate().onSetContentView();
     }
 
     @Override
