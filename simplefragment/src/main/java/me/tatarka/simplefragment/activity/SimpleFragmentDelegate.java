@@ -1,46 +1,55 @@
 package me.tatarka.simplefragment.activity;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
+import android.support.v4.view.LayoutInflaterCompat;
+import android.support.v4.view.LayoutInflaterFactory;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 
 import me.tatarka.simplefragment.SimpleFragmentContainer;
 import me.tatarka.simplefragment.SimpleFragmentContainerManager;
 import me.tatarka.simplefragment.SimpleFragmentContainerManagerProvider;
-import me.tatarka.simplefragment.SimpleFragmentDialogContainer;
-import me.tatarka.simplefragment.SimpleFragmentLayoutInflaterFactory;
 import me.tatarka.simplefragment.SimpleFragmentManager;
 import me.tatarka.simplefragment.SimpleFragmentManagerProvider;
+import me.tatarka.simplefragment.SimpleFragmentViewInflater;
 import me.tatarka.simplefragment.backstack.SimpleFragmentBackStack;
-import me.tatarka.simplefragment.key.SimpleFragmentKey;
 
 /**
  * Created by evan on 3/7/15.
  */
-public class SimpleFragmentActivityHelper implements SimpleFragmentManagerProvider, SimpleFragmentContainerManagerProvider {
+public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, SimpleFragmentContainerManagerProvider, LayoutInflaterFactory {
+    private static final String TAG = "SimpleFragmentDelegate";
     private static final String STATE = "me.tatarka.simplefragment.STATE";
 
-    private ActivityInfo info;
+    private Activity activity;
     private SimpleFragmentManager fm;
     private SimpleFragmentContainerManager cm;
+    private SimpleFragmentViewInflater viewInflater;
+    private LayoutInflaterFactory delegateFactory;
 
-    public SimpleFragmentActivityHelper(ActivityInfo info) {
-        this.info = info;
+    public static SimpleFragmentDelegate create(Activity activity) {
+        return new SimpleFragmentDelegate(activity);
+    }
+
+    private SimpleFragmentDelegate(Activity activity) {
+        this.activity = activity;
     }
 
     public void onCreate(Bundle savedInstanceState) {
-        Context context = info.getContext();
+        Context context = activity;
 
         if (savedInstanceState == null) {
             fm = new SimpleFragmentManager(context);
             cm = new SimpleFragmentContainerManager(fm, null);
         } else {
-            Object lastNonConfigInstance = info.getLastNonConfigurationInstance();
+            Object lastNonConfigInstance = activity.getLastNonConfigurationInstance();
             if (lastNonConfigInstance != null) {
                 NonConfigInstance instance = (NonConfigInstance) lastNonConfigInstance;
                 fm = instance.fm;
@@ -55,11 +64,10 @@ public class SimpleFragmentActivityHelper implements SimpleFragmentManagerProvid
             }
         }
 
-        View rootView = info.getRootView();
-        LayoutInflater layoutInflater = info.getLayoutInflater();
-        cm.setView(layoutInflater, rootView);
+        View rootView = activity.getWindow().getDecorView();
+        cm.setView(rootView);
     }
-    
+
     public void onDestroy() {
         fm.clearConfigurationState();
         cm.clearView();
@@ -83,16 +91,52 @@ public class SimpleFragmentActivityHelper implements SimpleFragmentManagerProvid
         return instance.clientState;
     }
 
-    public View onCreateView(String name, Context context, AttributeSet attrs) {
-        SimpleFragmentContainer container = SimpleFragmentContainer.getInstance(cm);
-        return SimpleFragmentLayoutInflaterFactory.onCreateView(container, name, context, attrs);
+    @Nullable
+    public View createView(View parent, String name, Context context, AttributeSet attrs) {
+        if (viewInflater == null) {
+            viewInflater = new SimpleFragmentViewInflater(this);
+        }
+        return viewInflater.createView(parent, name, context, attrs);
+    }
+
+    public void installViewFactory(@Nullable LayoutInflaterFactory delegateFactory) {
+        this.delegateFactory = delegateFactory;
+        LayoutInflater layoutInflater = LayoutInflater.from(activity);
+        if (layoutInflater.getFactory() == null) {
+            LayoutInflaterCompat.setFactory(layoutInflater, this);
+        } else {
+            Log.i(TAG, "The Activity's LayoutInflater already has a Factory installed"
+                    + " so we can not install AppCompat's");
+        }
+    }
+
+    /**
+     * From {@link android.support.v4.view.LayoutInflaterFactory}
+     */
+    @Override
+    public View onCreateView(View parent, String name, Context context, AttributeSet attrs) {
+        // First let the Activity's Factory try and inflate the view
+        View view = activity.onCreateView(name, context, attrs);
+        if (view != null) {
+            return view;
+        }
+        // If that doesn't work, try our delegate factory.
+        if (delegateFactory != null) {
+            view = delegateFactory.onCreateView(parent, name, context, attrs);
+            if (view != null) {
+                return view;
+            }
+        }
+
+        // If the Factory didn't handle it, let our createView() method try
+        return createView(parent, name, context, attrs);
     }
 
     @Override
     public SimpleFragmentManager getSimpleFragmentManager() {
         return fm;
     }
-    
+
     @Override
     public SimpleFragmentContainerManager getSimpleFragmentContainerManager() {
         return cm;
@@ -100,16 +144,6 @@ public class SimpleFragmentActivityHelper implements SimpleFragmentManagerProvid
 
     public boolean onBackPress() {
         return SimpleFragmentBackStack.getInstance(fm).pop();
-    }
-
-    public interface ActivityInfo {
-        Context getContext();
-
-        LayoutInflater getLayoutInflater();
-
-        View getRootView();
-
-        Object getLastNonConfigurationInstance();
     }
 
     private static class NonConfigInstance {

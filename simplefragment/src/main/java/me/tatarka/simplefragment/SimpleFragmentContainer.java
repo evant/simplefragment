@@ -29,7 +29,6 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
     private SimpleFragmentManager fm;
     private SimpleFragmentKey parentKey;
     private View rootView;
-    private LayoutInflater layoutInflater;
     private List<LayoutKey> attachedKeys;
     private Map<LayoutKey, SimpleFragment> fragmentsPendingAttach;
     private SimpleFragmentBackStack backStack;
@@ -61,19 +60,18 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
     }
 
     @Override
-    public void onAttachView(LayoutInflater layoutInflater, View rootView) {
-        this.layoutInflater = layoutInflater;
+    public void onAttachView(View rootView) {
         this.rootView = rootView;
 
         // Restore previously attached fragments.
         for (LayoutKey key : attachedKeys) {
             SimpleFragment childFragment = fm.find(key);
-            attachFragment(rootView, layoutInflater, childFragment);
+            attachFragment(rootView, childFragment);
         }
 
         // View is ready, we can createView all pending fragments now.
         for (Map.Entry<LayoutKey, SimpleFragment> entry : fragmentsPendingAttach.entrySet()) {
-            attachFragment(rootView, layoutInflater, entry.getValue());
+            attachFragment(rootView, entry.getValue());
             attachedKeys.add(entry.getKey());
         }
         fragmentsPendingAttach.clear();
@@ -87,7 +85,6 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
             View view = fm.destroyView(fragment);
             parentView.removeView(view);
         }
-        layoutInflater = null;
         rootView = null;
     }
 
@@ -127,7 +124,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
     public <T extends SimpleFragment> T add(SimpleFragmentIntent<T> intent, @IdRes int viewId) {
         SimpleFragmentKey key = new LayoutKey(parentKey, viewId);
         T fragment = fm.create(intent, key);
-        maybeAttachFragment(rootView, layoutInflater, fragment);
+        maybeAttachFragment(rootView, fragment);
         return fragment;
     }
 
@@ -270,10 +267,10 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
      * successful. If the root view hasn't been set yet, this attachment will be delayed until the
      * root view is set.
      */
-    private void maybeAttachFragment(View rootView, LayoutInflater layoutInflater, SimpleFragment fragment) {
+    private void maybeAttachFragment(View rootView, SimpleFragment fragment) {
         LayoutKey key = (LayoutKey) fragment.getKey();
         if (rootView != null) {
-            attachFragment(rootView, layoutInflater, fragment);
+            attachFragment(rootView, fragment);
             attachedKeys.add(key);
         } else {
             fragmentsPendingAttach.put(key, fragment);
@@ -283,7 +280,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
     /**
      * Attaches the fragment to the rootView given it's path.
      */
-    private void attachFragment(View rootView, LayoutInflater layoutInflater, SimpleFragment fragment) {
+    private void attachFragment(View rootView, SimpleFragment fragment) {
         LayoutKey key = (LayoutKey) fragment.getKey();
         int viewId = key.getViewId();
         View parentView = rootView.findViewById(viewId);
@@ -294,7 +291,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
             throw new IllegalArgumentException("View with id '" + ResUtil.safeGetIdName(fm.getContext().getResources(), viewId) + "' is not an instance of ViewGroup.");
         }
         ViewGroup parent = (ViewGroup) parentView;
-        View view = fm.createView(fragment, layoutInflater, parent);
+        View view = fm.createView(fragment, LayoutInflater.from(rootView.getContext()), parent);
         parent.addView(view);
     }
 
@@ -313,7 +310,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
                 View view = fm.destroyView(oldFragment);
                 parentView.removeView(view);
             }
-            maybeAttachFragment(rootView, layoutInflater, newFragment);
+            maybeAttachFragment(rootView, newFragment);
         }
     }
 

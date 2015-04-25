@@ -1,13 +1,8 @@
 package me.tatarka.simplefragment.activity;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
-import android.util.AttributeSet;
-import android.view.LayoutInflater;
-import android.view.View;
 
-import me.tatarka.simplefragment.SimpleFragmentContainer;
 import me.tatarka.simplefragment.SimpleFragmentContainerManager;
 import me.tatarka.simplefragment.SimpleFragmentContainerManagerProvider;
 import me.tatarka.simplefragment.SimpleFragmentManager;
@@ -17,55 +12,30 @@ import me.tatarka.simplefragment.SimpleFragmentManagerProvider;
  * Created by evan on 3/7/15.
  */
 public class SimpleFragmentActivity extends Activity implements SimpleFragmentManagerProvider, SimpleFragmentContainerManagerProvider {
-    private SimpleFragmentActivityHelper helper = new SimpleFragmentActivityHelper(new SimpleFragmentActivityHelper.ActivityInfo() {
-        @Override
-        public Context getContext() {
-            return SimpleFragmentActivity.this;
-        }
-
-        @Override
-        public LayoutInflater getLayoutInflater() {
-            return SimpleFragmentActivity.super.getLayoutInflater();
-        }
-
-        @Override
-        public View getRootView() {
-            return findViewById(android.R.id.content);
-        }
-
-        @Override
-        public Object getLastNonConfigurationInstance() {
-            return SimpleFragmentActivity.this.getLastNonConfigurationInstance();
-        }
-    });
+    private SimpleFragmentDelegate delegate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        getSimpleFragmentDelegate().installViewFactory(null);
         super.onCreate(savedInstanceState);
-        helper.onCreate(savedInstanceState);
+        getSimpleFragmentDelegate().onCreate(savedInstanceState);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        helper.onDestroy();
+        getSimpleFragmentDelegate().onDestroy();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        helper.onSaveInstanceState(outState);
+        getSimpleFragmentDelegate().onSaveInstanceState(outState);
     }
-    
-    @Override
-    public View onCreateView(String name, Context context, AttributeSet attrs) {
-        View view = helper.onCreateView(name, context, attrs);
-        return view != null ? view : super.onCreateView(name, context, attrs);
-    }
-    
+
     @Override
     public final Object onRetainNonConfigurationInstance() {
-        return helper.onRetainNonConfigurationInstance(onRetainCustomNonConfigurationInstance());
+        return getSimpleFragmentDelegate().onRetainNonConfigurationInstance(onRetainCustomNonConfigurationInstance());
     }
 
     public Object onRetainCustomNonConfigurationInstance() {
@@ -73,23 +43,30 @@ public class SimpleFragmentActivity extends Activity implements SimpleFragmentMa
     }
 
     public Object getLastCustomNonCofigurationInstance() {
-        return helper.getLastCustomNonConfigurationInstance(getLastNonConfigurationInstance());
+        return getSimpleFragmentDelegate().getLastCustomNonConfigurationInstance(getLastNonConfigurationInstance());
     }
 
     @Override
     public void onBackPressed() {
-        if (!helper.onBackPress()) {
+        if (!getSimpleFragmentDelegate().onBackPress()) {
             super.onBackPressed();
         }
     }
 
     @Override
     public SimpleFragmentManager getSimpleFragmentManager() {
-        return helper.getSimpleFragmentManager();
+        return getSimpleFragmentDelegate().getSimpleFragmentManager();
     }
 
     @Override
     public SimpleFragmentContainerManager getSimpleFragmentContainerManager() {
-        return helper.getSimpleFragmentContainerManager();
+        return getSimpleFragmentDelegate().getSimpleFragmentContainerManager();
+    }
+
+    public SimpleFragmentDelegate getSimpleFragmentDelegate() {
+        if (delegate == null) {
+            delegate = SimpleFragmentDelegate.create(this);
+        }
+        return delegate;
     }
 }

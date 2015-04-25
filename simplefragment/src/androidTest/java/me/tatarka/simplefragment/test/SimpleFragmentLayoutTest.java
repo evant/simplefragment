@@ -2,12 +2,11 @@ package me.tatarka.simplefragment.test;
 
 import android.test.AndroidTestCase;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import me.tatarka.simplefragment.SimpleFragmentContainer;
-import me.tatarka.simplefragment.SimpleFragmentLayoutInflaterFactory;
+import me.tatarka.simplefragment.SimpleFragmentViewInflater;
 import me.tatarka.simplefragment.SimpleFragmentManager;
 import me.tatarka.simplefragment.key.LayoutKey;
 
@@ -30,7 +29,7 @@ public class SimpleFragmentLayoutTest extends AndroidTestCase {
     public void testInflate() {
         SimpleFragmentManager fm = new SimpleFragmentManager(getContext());
         SimpleFragmentContainer container = new SimpleFragmentContainer(fm, null);
-        inflater.setFactory(new SimpleFragmentLayoutInflaterFactory(container));
+        inflater.setFactory(new SimpleFragmentViewInflater(container));
         inflater.inflate(R.layout.fragment_layout_test, rootView);
         container.setRootView(rootView, inflater);
 
@@ -40,7 +39,7 @@ public class SimpleFragmentLayoutTest extends AndroidTestCase {
     public void testInflateNested() {
         SimpleFragmentManager fm = new SimpleFragmentManager(getContext());
         SimpleFragmentContainer container = new SimpleFragmentContainer(fm, null);
-        inflater.setFactory(new SimpleFragmentLayoutInflaterFactory(container));
+        inflater.setFactory(new SimpleFragmentViewInflater(container));
         inflater.inflate(R.layout.fragment_layout_test_nested, rootView);
         container.setRootView(rootView, inflater);
 
@@ -51,7 +50,7 @@ public class SimpleFragmentLayoutTest extends AndroidTestCase {
     public void testInflateMultipleTimes() {
         SimpleFragmentManager fm = new SimpleFragmentManager(getContext());
         SimpleFragmentContainer container = new SimpleFragmentContainer(fm, null);
-        inflater.setFactory(new SimpleFragmentLayoutInflaterFactory(container));
+        inflater.setFactory(new SimpleFragmentViewInflater(container));
         inflater.inflate(R.layout.fragment_layout_test, rootView);
         container.setRootView(rootView, inflater);
         fm.destroyView(fm.find(new LayoutKey(R.id.test_fragment)), rootView);

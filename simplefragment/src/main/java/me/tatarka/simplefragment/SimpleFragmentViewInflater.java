@@ -2,27 +2,33 @@ package me.tatarka.simplefragment;
 
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.support.annotation.Nullable;
+import android.support.annotation.NonNull;
+import android.support.v4.view.LayoutInflaterFactory;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
-
-import me.tatarka.simplefragment.key.LayoutKey;
-import me.tatarka.simplefragment.key.SimpleFragmentKey;
 
 /**
  * A custom {@code LayoutInflater.Factory} that instantiates fragment tags as SimpleFragments instead of
  * Android fragments.
  */
-public class SimpleFragmentLayoutInflaterFactory implements LayoutInflater.Factory {
+public class SimpleFragmentViewInflater implements LayoutInflaterFactory {
     private static final int[] ATTRS = new int[]{
             android.R.attr.name
     };
     private static final int ATTR_NAME = 0;
 
-    @Nullable
-    public static View onCreateView(SimpleFragmentContainer container, String name, Context context, AttributeSet attrs) {
+    private SimpleFragmentContainer container;
+
+    public SimpleFragmentViewInflater(SimpleFragmentContainerManagerProvider provider) {
+        this(SimpleFragmentContainer.getInstance(provider));
+    }
+
+    public SimpleFragmentViewInflater(SimpleFragmentContainer container) {
+        this.container = container;
+    }
+
+    public final View createView(View parent, final String name, @NonNull Context context, @NonNull AttributeSet attrs) {
         if (!name.equals("fragment")) {
             return null;
         }
@@ -45,14 +51,8 @@ public class SimpleFragmentLayoutInflaterFactory implements LayoutInflater.Facto
         }
     }
 
-    private SimpleFragmentContainer container;
-
-    public SimpleFragmentLayoutInflaterFactory(SimpleFragmentContainer container) {
-        this.container = container;
-    }
-
     @Override
-    public View onCreateView(String name, Context context, AttributeSet attrs) {
-        return onCreateView(container, name, context, attrs);
+    public View onCreateView(View parent, String name, Context context, AttributeSet attrs) {
+        return createView(parent, name, context, attrs);
     }
 }

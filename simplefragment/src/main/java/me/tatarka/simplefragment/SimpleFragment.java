@@ -8,11 +8,10 @@ import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import me.tatarka.simplefragment.key.SimpleFragmentKey;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import me.tatarka.simplefragment.key.SimpleFragmentKey;
 
 /**
  * Created by evan on 1/11/15.
@@ -62,7 +61,7 @@ public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> implem
         for (LifecycleListener<V> listener : lifecycleListeners) {
             listener.onViewCreated(viewHolder, view);
         }
-        cm.setView(inflater, view);
+        cm.setView(view);
         onViewHolderCreated(viewHolder, view);
         return view;
     }

@@ -3,13 +3,11 @@ package me.tatarka.simplefragment;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
-import android.view.LayoutInflater;
 import android.view.View;
+import me.tatarka.simplefragment.key.SimpleFragmentKey;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import me.tatarka.simplefragment.key.SimpleFragmentKey;
 
 /**
  * Created by evan on 3/28/15.
@@ -18,7 +16,6 @@ public class SimpleFragmentContainerManager implements SimpleFragmentManagerProv
     private SimpleFragmentManager fm;
     @Nullable
     private SimpleFragmentKey parentKey;
-    private LayoutInflater layoutInflater;
     private View rootView;
     private Map<Key<?>, Value> containers;
     
@@ -38,17 +35,15 @@ public class SimpleFragmentContainerManager implements SimpleFragmentManagerProv
         return parentKey;
     }
     
-    public void setView(LayoutInflater layoutInflater, View rootView) {
+    public void setView(View rootView) {
         this.rootView = rootView; 
-        this.layoutInflater = layoutInflater;
         for (Value container: containers.values()) {
-            container.onAttachView(layoutInflater, rootView);
+            container.onAttachView(rootView);
         }
     }
     
     public void clearView() {
-        if (layoutInflater != null) {
-            layoutInflater = null;
+        if (rootView != null) {
             rootView = null;
             for (Value container: containers.values()) {
                 container.onClearView();
@@ -71,16 +66,16 @@ public class SimpleFragmentContainerManager implements SimpleFragmentManagerProv
             Key<?> key = new Key<>(entry.getKey());
             Value value = (Value) entry.getValue();
             containers.put(key, value);
-            if (layoutInflater != null) {
-                value.onAttachView(layoutInflater, rootView);
+            if (rootView != null) {
+                value.onAttachView(rootView);
             }
         }
     }
     
     public <T extends Value> void put(Key<T> key, T value) {
         containers.put(key, value);
-        if (layoutInflater != null) {
-            value.onAttachView(layoutInflater, rootView);
+        if (rootView != null) {
+            value.onAttachView(rootView);
         }
     }
     
@@ -154,7 +149,7 @@ public class SimpleFragmentContainerManager implements SimpleFragmentManagerProv
     }
 
     public interface Value extends Parcelable {
-        void onAttachView(LayoutInflater layoutInflater, View rootView);
+        void onAttachView(View rootView);
 
         void onClearView();
     }

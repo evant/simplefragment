@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
+import android.support.v4.view.LayoutInflaterCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -151,7 +152,7 @@ public class SimpleFragmentManager {
 
         // To support <fragment> tags in nested layouts, we need a custom inflater.
         LayoutInflater fragmentInflater = layoutInflater.cloneInContext(context);
-        fragmentInflater.setFactory(new SimpleFragmentLayoutInflaterFactory(SimpleFragmentContainer.getInstance(fragment)));
+        LayoutInflaterCompat.setFactory(fragmentInflater, new SimpleFragmentViewInflater(SimpleFragmentContainer.getInstance(fragment)));
 
         return fragment.createView(fragmentInflater, parentView);
     }

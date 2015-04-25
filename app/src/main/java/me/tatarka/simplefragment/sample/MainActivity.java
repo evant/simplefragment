@@ -5,12 +5,11 @@ import android.support.v4.view.ViewPager;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import me.tatarka.simplefragment.SimpleFragmentActionBarActivity;
+import me.tatarka.simplefragment.SimpleFragmentAppCompatActivity;
 import me.tatarka.simplefragment.SimpleFragmentIntent;
-import me.tatarka.simplefragment.SimpleFragmentManager;
 import me.tatarka.simplefragment.widget.SimpleFragmentPagerAdapter;
 
-public class MainActivity extends SimpleFragmentActionBarActivity {
+public class MainActivity extends SimpleFragmentAppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

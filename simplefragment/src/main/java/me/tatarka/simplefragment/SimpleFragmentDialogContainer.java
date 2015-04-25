@@ -7,15 +7,10 @@ import android.os.Parcel;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import me.tatarka.simplefragment.key.SimpleFragmentKey;
 import me.tatarka.simplefragment.key.TagKey;
+
+import java.util.*;
 
 /**
  * Created by evan on 3/22/15.
@@ -25,7 +20,7 @@ public class SimpleFragmentDialogContainer implements SimpleFragmentContainerMan
 
     private SimpleFragmentManager fm;
     private SimpleFragmentKey parentKey;
-    private LayoutInflater layoutInflater;
+    private View rootView;
     private List<TagKey> attachedKeys;
     private Map<TagKey, SimpleDialogFragment> fragmentsPendingAttach;
 
@@ -54,18 +49,18 @@ public class SimpleFragmentDialogContainer implements SimpleFragmentContainerMan
     }
 
     @Override
-    public void onAttachView(LayoutInflater layoutInflater, View rootView) {
-        this.layoutInflater = layoutInflater;
+    public void onAttachView(View rootView) {
+        this.rootView = rootView;
 
         // Restore previously attached fragments.
         for (TagKey key : attachedKeys) {
             SimpleDialogFragment fragment = (SimpleDialogFragment) fm.find(key);
-            attachDialog(layoutInflater, fragment);
+            attachDialog(rootView, fragment);
         }
 
         // View is ready, we can createView all pending fragments now.
         for (Map.Entry<TagKey, SimpleDialogFragment> entry : fragmentsPendingAttach.entrySet()) {
-            attachDialog(layoutInflater, entry.getValue());
+            attachDialog(rootView, entry.getValue());
             attachedKeys.add(entry.getKey());
         }
         fragmentsPendingAttach.clear();
@@ -77,13 +72,13 @@ public class SimpleFragmentDialogContainer implements SimpleFragmentContainerMan
             SimpleDialogFragment fragment = (SimpleDialogFragment) fm.find(key);
             fm.destroyView(fragment);
         }
-        this.layoutInflater = null;
+        this.rootView = null;
     }
 
     public <T extends SimpleDialogFragment> T add(SimpleFragmentIntent<T> intent, @NonNull String tag) {
         TagKey key = new TagKey(parentKey, tag);
         T fragment = fm.create(intent, key);
-        maybeAttachDialog(layoutInflater, fragment);
+        maybeAttachDialog(rootView, fragment);
         return fragment;
     }
 
@@ -126,10 +121,10 @@ public class SimpleFragmentDialogContainer implements SimpleFragmentContainerMan
         return Collections.unmodifiableList(fragments);
     }
 
-    private void maybeAttachDialog(LayoutInflater layoutInflater, SimpleDialogFragment fragment) {
+    private void maybeAttachDialog(View rootView, SimpleDialogFragment fragment) {
         TagKey key = (TagKey) fragment.getKey();
-        if (layoutInflater != null) {
-            attachDialog(layoutInflater, fragment);
+        if (rootView != null) {
+            attachDialog(rootView, fragment);
             attachedKeys.add(key);
         } else {
             fragmentsPendingAttach.put(key, fragment);
@@ -137,8 +132,8 @@ public class SimpleFragmentDialogContainer implements SimpleFragmentContainerMan
     }
 
     @SuppressWarnings("unchecked")
-    private void attachDialog(LayoutInflater layoutInflater, final SimpleDialogFragment fragment) {
-        fm.createView(fragment, layoutInflater, null);
+    private void attachDialog(View rootView, final SimpleDialogFragment fragment) {
+        fm.createView(fragment, LayoutInflater.from(rootView.getContext()), null);
         Dialog dialog = fragment.getDialog();
         if (dialog != null) {
             dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
