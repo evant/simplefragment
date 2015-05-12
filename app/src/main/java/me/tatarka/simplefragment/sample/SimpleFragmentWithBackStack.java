@@ -17,13 +17,13 @@ import static me.tatarka.simplefragment.sample.SimpleFragmentChildWithBackStack.
 /**
  * Created by evan on 2/2/15.
  */
-public class SimpleFragmentWithBackStack extends SimpleFragment<SimpleFragment.ViewHolder> {
+public class SimpleFragmentWithBackStack extends SimpleFragment {
     SimpleFragmentContainer container;
-    
+
     @Override
     public void onCreate(Context context, @Nullable Bundle state) {
         container = SimpleFragmentContainer.getInstance(this);
-        
+
         container.findOrAdd(
                 new SimpleFragmentIntent<>(SimpleFragmentChildWithBackStack.class)
                         .putArg(ARG_VIEW_ID, R.id.child_fragment1), R.id.child_fragment1);
@@ -49,18 +49,13 @@ public class SimpleFragmentWithBackStack extends SimpleFragment<SimpleFragment.V
             }
         };
 
-        for (SimpleFragment<?> fragment : container.getFragments()) {
+        for (SimpleFragment fragment : container.getFragments()) {
             ((SimpleFragmentChildWithBackStack) fragment).setListeners(addListener, removeListener);
         }
     }
-    
+
     @Override
-    public ViewHolder onCreateViewHolder(final LayoutInflater inflater, final ViewGroup parent) {
-        return new ViewHolder() {
-            @Override
-            public View getView() {
-                return inflater.inflate(R.layout.fragment_with_backstack, parent, false);
-            }
-        };
+    public View onCreateView(final LayoutInflater inflater, final ViewGroup parent) {
+        return inflater.inflate(R.layout.fragment_with_backstack, parent, false);
     }
 }

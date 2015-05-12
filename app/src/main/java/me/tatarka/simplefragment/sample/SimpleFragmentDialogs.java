@@ -2,6 +2,7 @@ package me.tatarka.simplefragment.sample;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,13 +17,13 @@ import me.tatarka.simplefragment.SimpleFragmentIntent;
 /**
  * Created by evan on 3/21/15.
  */
-public class SimpleFragmentDialogs extends SimpleFragment<SimpleFragment.ViewHolder> {
+public class SimpleFragmentDialogs extends SimpleFragment {
     SimpleFragmentDialogContainer container;
-    
+
     @Override
     public void onCreate(final Context context, @Nullable Bundle state) {
         container = SimpleFragmentDialogContainer.getInstance(this);
-        
+
         SimpleFragmentDialog dialogFragment = (SimpleFragmentDialog) container.find("dialog");
         if (dialogFragment != null) {
             setDialogListener(dialogFragment);
@@ -30,24 +31,22 @@ public class SimpleFragmentDialogs extends SimpleFragment<SimpleFragment.ViewHol
     }
 
     @Override
-    public ViewHolder onCreateViewHolder(final LayoutInflater inflater, final ViewGroup parent) {
-        return new ViewHolder() {
-            @Override
-            public View getView() {
-                View view = inflater.inflate(R.layout.fragment_dialogs, parent, false);
-                view.findViewById(R.id.show_dialog).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        final SimpleFragmentDialog dialogFragment = container.add(new SimpleFragmentIntent<>(SimpleFragmentDialog.class), "dialog");
-                        setDialogListener(dialogFragment);
-                        dialogFragment.show();
-                    }
-                });
-                return view;
-            }
-        };
+    public View onCreateView(final LayoutInflater inflater, final ViewGroup parent) {
+        return inflater.inflate(R.layout.fragment_dialogs, parent, false);
     }
-    
+
+    @Override
+    public void onViewCreated(@NonNull View view) {
+        view.findViewById(R.id.show_dialog).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final SimpleFragmentDialog dialogFragment = container.add(new SimpleFragmentIntent<>(SimpleFragmentDialog.class), "dialog");
+                setDialogListener(dialogFragment);
+                dialogFragment.show();
+            }
+        });
+    }
+
     private void setDialogListener(SimpleFragmentDialog fragment) {
         fragment.setOnAlertButtonClickedListener(new SimpleFragmentDialog.OnAlertButtonClickedListener() {
             @Override

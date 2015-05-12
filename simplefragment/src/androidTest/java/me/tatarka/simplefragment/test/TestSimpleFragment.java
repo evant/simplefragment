@@ -20,12 +20,7 @@ public class TestSimpleFragment extends SimpleFragment {
     }
 
     @Override
-    public ViewHolder onCreateViewHolder(final LayoutInflater inflater, final ViewGroup parent) {
-        return new ViewHolder() {
-            @Override
-            public View getView() {
-                return new TestSimpleFragmentRootView(inflater.getContext());
-            }
-        };
+    public View onCreateView(final LayoutInflater inflater, final ViewGroup parent) {
+        return new TestSimpleFragmentRootView(inflater.getContext());
     }
 }

@@ -92,7 +92,7 @@ public class SimpleFragmentDialogContainer implements SimpleFragmentContainerMan
         return add(intent, tag);
     }
 
-    public void remove(SimpleDialogFragment<?> fragment) {
+    public void remove(SimpleDialogFragment fragment) {
         TagKey key = (TagKey) fragment.getKey();
         attachedKeys.remove(key);
         if (fragment.getView() != null) {
@@ -101,22 +101,22 @@ public class SimpleFragmentDialogContainer implements SimpleFragmentContainerMan
         fm.destroy(fragment);
     }
 
-    public SimpleDialogFragment<?> find(String tag) {
+    public SimpleDialogFragment find(String tag) {
         if (tag == null) {
             return null;
         }
         for (TagKey key : attachedKeys) {
             if (key.getTag().equals(tag)) {
-                return (SimpleDialogFragment<?>) fm.find(key);
+                return (SimpleDialogFragment) fm.find(key);
             }
         }
         return null;
     }
 
-    public List<SimpleDialogFragment<?>> getFragments() {
-        List<SimpleDialogFragment<?>> fragments = new ArrayList<>(attachedKeys.size());
+    public List<SimpleDialogFragment> getFragments() {
+        List<SimpleDialogFragment> fragments = new ArrayList<>(attachedKeys.size());
         for (TagKey key : attachedKeys) {
-            fragments.add((SimpleDialogFragment<?>) fm.find(key));
+            fragments.add((SimpleDialogFragment) fm.find(key));
         }
         return Collections.unmodifiableList(fragments);
     }

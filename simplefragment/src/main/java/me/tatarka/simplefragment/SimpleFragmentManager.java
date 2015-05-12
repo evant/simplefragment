@@ -26,7 +26,7 @@ import me.tatarka.simplefragment.key.SimpleFragmentKey;
  */
 public class SimpleFragmentManager {
     private Context context;
-    private List<SimpleFragment<?>> fragments;
+    private List<SimpleFragment> fragments;
     private Map<ExtraKey<?>, ExtraValue> extras;
 
     public SimpleFragmentManager(Context context) {
@@ -39,12 +39,12 @@ public class SimpleFragmentManager {
         return context;
     }
 
-    public List<SimpleFragment<?>> getFragments() {
+    public List<SimpleFragment> getFragments() {
         return Collections.unmodifiableList(fragments);
     }
 
     @Nullable
-    public SimpleFragment<?> find(SimpleFragmentKey key) {
+    public SimpleFragment find(SimpleFragmentKey key) {
         if (key == null) {
             return null;
         }
@@ -116,7 +116,7 @@ public class SimpleFragmentManager {
      * @throws java.lang.IllegalArgumentException If the given fragment is null or was not added to
      *                                            this manager.
      */
-    public void destroy(SimpleFragment<?> fragment) {
+    public void destroy(SimpleFragment fragment) {
         if (fragment == null) {
             throw new IllegalArgumentException("SimpleFragment cannot be null.");
         }
@@ -130,7 +130,7 @@ public class SimpleFragmentManager {
 
     /**
      * Creates the view for the given fragment. This will trigger {@link
-     * me.tatarka.simplefragment.SimpleFragment#onCreateViewHolder(LayoutInflater, ViewGroup)}
+     * me.tatarka.simplefragment.SimpleFragment#onCreateView(LayoutInflater, ViewGroup)}
      * immediately. This will <em>not</em> occur automatically on configuration changes, you are
      * responsible for calling it again in those cases.
      *
@@ -138,7 +138,7 @@ public class SimpleFragmentManager {
      * @throws java.lang.IllegalArgumentException If the given fragment is null or was not added to
      *                                            this manager.
      */
-    public View createView(SimpleFragment<?> fragment, LayoutInflater layoutInflater, @Nullable ViewGroup parentView) {
+    public View createView(SimpleFragment fragment, LayoutInflater layoutInflater, @Nullable ViewGroup parentView) {
         if (fragment == null) {
             throw new IllegalArgumentException("SimpleFragment cannot be null.");
         }
@@ -164,7 +164,7 @@ public class SimpleFragmentManager {
      * @return The view being destroyed so you can remove it from the layout hierarchy if required,
      * or null if the fragment's view has already been destroyed.
      */
-    public View destroyView(SimpleFragment<?> fragment) {
+    public View destroyView(SimpleFragment fragment) {
         if (fragment == null) {
             throw new IllegalArgumentException("SimpleFragment cannot be null.");
         }
@@ -179,7 +179,7 @@ public class SimpleFragmentManager {
         Parcelable[] fragmentStates = new Parcelable[fragments.size()];
         for (int i = 0; i < fragments.size(); i++) {
             SimpleFragment fragment = fragments.get(i);
-            fragmentStates[i] = fragment.saveState(getContext());
+            fragmentStates[i] = fragment.saveState();
         }
         Map<String, Parcelable> extraStates = new HashMap<>(extras.size());
         for (Map.Entry<ExtraKey<?>, ExtraValue> entry : extras.entrySet()) {
@@ -197,7 +197,7 @@ public class SimpleFragmentManager {
             extras.put(key, value);
         }
         // We need to loop twice, once to add all the fragments to the manager, and once to restore
-        // their states. This is so fragments will always see their children as existing. 
+        // their states. This is so fragments will always see their children as existing.
         fragments = new ArrayList<>(state.fragmentStates.length);
         for (Parcelable fragmentState : state.fragmentStates) {
             SimpleFragment fragment = SimpleFragment.newInstance(fragmentState);

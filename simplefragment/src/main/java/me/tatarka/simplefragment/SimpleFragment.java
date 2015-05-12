@@ -4,37 +4,37 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import me.tatarka.simplefragment.key.SimpleFragmentKey;
 
-import java.util.ArrayList;
-import java.util.List;
+import me.tatarka.simplefragment.key.SimpleFragmentKey;
 
 /**
  * Created by evan on 1/11/15.
  */
-public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> implements SimpleFragmentManagerProvider, SimpleFragmentContainerManagerProvider {
-    private V viewHolder;
+public abstract class SimpleFragment implements SimpleFragmentManagerProvider, SimpleFragmentContainerManagerProvider {
     private View view;
     private State state = new State();
     private SimpleFragmentManager fm;
     private SimpleFragmentContainerManager cm;
-    private List<LifecycleListener<V>> lifecycleListeners = new ArrayList<>();
 
     public abstract void onCreate(Context context, @Nullable Bundle state);
 
-    public void onSave(Context context, Bundle state) {
+    public abstract View onCreateView(LayoutInflater inflater, ViewGroup parent);
+
+    public void onViewCreated(@NonNull View view) {
     }
 
-    public abstract V onCreateViewHolder(LayoutInflater inflater, ViewGroup parent);
-
-    public void onViewHolderCreated(V viewHolder, View view) {
+    public void onViewDestroyed(@NonNull View view) {
     }
-    
-    public void onDestroyViewHolder() {
+
+    public void onSave(@NonNull Bundle state) {
+    }
+
+    public void onDestroy() {
     }
 
     public boolean onBackPressed() {
@@ -50,35 +50,24 @@ public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> implem
     }
 
     final View createView(LayoutInflater inflater, ViewGroup parent) {
-        viewHolder = onCreateViewHolder(inflater, parent);
-        if (viewHolder == null) {
-            throw new NullPointerException("The SimpleFragment '" + this + "' must not return null from onCreateViewHolder()");
-        }
-        view = viewHolder.getView();
+        view = onCreateView(inflater, parent);
         if (view == null) {
-            throw new NullPointerException("The SimpleFragment.ViewHolder '" + viewHolder + "' must not return null from getView()");
-        }
-        for (LifecycleListener<V> listener : lifecycleListeners) {
-            listener.onViewCreated(viewHolder, view);
+            throw new NullPointerException("SimpleFragment.onCreateView() in '" + this + "' must not return null.");
         }
         cm.setView(view);
-        onViewHolderCreated(viewHolder, view);
+        onViewCreated(view);
         return view;
     }
 
     final void destroyView() {
-        for (LifecycleListener<V> listener : lifecycleListeners) {
-            listener.onViewDestroyed();
-        }
-        onDestroyViewHolder();
-        viewHolder = null;
+        onViewDestroyed(view);
         view = null;
         cm.clearView();
     }
 
-    final Parcelable saveState(Context context) {
+    final Parcelable saveState() {
         state.state = new Bundle();
-        onSave(context, state.state);
+        onSave(state.state);
         state.cmState = cm.saveState();
         return state;
     }
@@ -111,11 +100,11 @@ public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> implem
         }
     }
 
-    @Nullable
-    public V getViewHolder() {
-        return viewHolder;
-    }
-
+    /**
+     * Returns the view attached to the fragment. Since the lifecycle of the SimpleFragment is
+     * longer than the view, you must not keep a reference to it. It also may be null if you are not
+     * between the lifecycle events {@link #onViewCreated(View)} and {@link #onViewDestroyed(View)}.
+     */
     @Nullable
     public View getView() {
         return view;
@@ -129,7 +118,7 @@ public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> implem
     public SimpleFragmentManager getSimpleFragmentManager() {
         return fm;
     }
-    
+
     @Override
     public SimpleFragmentContainerManager getSimpleFragmentContainerManager() {
         return cm;
@@ -137,18 +126,6 @@ public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> implem
 
     public SimpleFragmentIntent getIntent() {
         return state.intent;
-    }
-    
-    public void addLifecycleListener(LifecycleListener<V> listener) {
-        lifecycleListeners.add(listener);
-    }
-    
-    public void removeLifecycleListener(LifecycleListener<V> listener) {
-        lifecycleListeners.remove(listener);
-    }
-    
-    public interface ViewHolder {
-        View getView();
     }
 
     State getState() {
@@ -164,7 +141,7 @@ public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> implem
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        SimpleFragment<?> fragment = (SimpleFragment<?>) o;
+        SimpleFragment fragment = (SimpleFragment) o;
         return getKey().equals(fragment.getKey());
     }
 
@@ -177,7 +154,7 @@ public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> implem
     public String toString() {
         return "SimpleFragment(" + getKey() + ")";
     }
-    
+
     private static class State implements Parcelable {
         private SimpleFragmentIntent intent;
         private Bundle state;
@@ -216,10 +193,5 @@ public abstract class SimpleFragment<V extends SimpleFragment.ViewHolder> implem
                 return new State[size];
             }
         };
-    }
-
-    public interface LifecycleListener<T extends ViewHolder> {
-        void onViewCreated(T viewHolder, View view);
-        void onViewDestroyed();
     }
 }

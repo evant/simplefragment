@@ -32,7 +32,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
     private List<LayoutKey> attachedKeys;
     private Map<LayoutKey, SimpleFragment> fragmentsPendingAttach;
     private SimpleFragmentBackStack backStack;
-    
+
     public static SimpleFragmentContainer getInstance(SimpleFragmentContainerManagerProvider provider) {
         return getInstance(provider.getSimpleFragmentContainerManager());
     }
@@ -51,7 +51,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
         this.attachedKeys = new ArrayList<>();
         this.fragmentsPendingAttach = new HashMap<>();
     }
-    
+
     private void setManager(SimpleFragmentContainerManager cm) {
         this.fm = cm.getSimpleFragmentManager();
         this.parentKey = cm.getParentKey();
@@ -153,7 +153,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
      *
      * @param fragment The fragment to remove.
      */
-    public void remove(SimpleFragment<?> fragment) {
+    public void remove(SimpleFragment fragment) {
         LayoutKey key = (LayoutKey) fragment.getKey();
         attachedKeys.remove(key);
         if (!backStack.remove(key)) {
@@ -172,7 +172,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
      * @param viewId The view id to search with.
      * @return The fragment or null if it cannot be found.
      */
-    public SimpleFragment<?> find(@IdRes int viewId) {
+    public SimpleFragment find(@IdRes int viewId) {
         for (LayoutKey key : attachedKeys) {
             if (key.getViewId() == viewId) {
                 return fm.find(key);
@@ -188,9 +188,9 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
      *
      * @return The list of fragments.
      */
-    public List<SimpleFragment<?>> getFragments() {
-        List<SimpleFragment<?>> fragments = new ArrayList<>();
-        for (SimpleFragment<?> fragment : fm.getFragments()) {
+    public List<SimpleFragment> getFragments() {
+        List<SimpleFragment> fragments = new ArrayList<>();
+        for (SimpleFragment fragment : fm.getFragments()) {
             SimpleFragmentKey key = fragment.getKey();
             if (key instanceof LayoutKey && equals(((LayoutKey) key).getParent(), parentKey)) {
                 fragments.add(fragment);
@@ -205,8 +205,8 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
      *
      * @return The list of fragments.
      */
-    public List<SimpleFragment<?>> getAttachedFragments() {
-        List<SimpleFragment<?>> fragments = new ArrayList<>(attachedKeys.size());
+    public List<SimpleFragment> getAttachedFragments() {
+        List<SimpleFragment> fragments = new ArrayList<>(attachedKeys.size());
         for (LayoutKey key : attachedKeys) {
             fragments.add(fm.find(key));
         }

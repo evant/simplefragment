@@ -1,37 +1,31 @@
 package me.tatarka.simplefragment.sample;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import me.tatarka.simplefragment.SimpleDialogFragment;
-import me.tatarka.simplefragment.SimpleFragment;
 
 /**
  * Created by evan on 3/22/15.
  */
-public class SimpleFragmentDialog extends SimpleDialogFragment<SimpleFragment.ViewHolder> {
+public class SimpleFragmentDialog extends SimpleDialogFragment {
     private OnAlertButtonClickedListener listener;
-    
+
     @Override
     public void onCreate(Context context, @Nullable Bundle state) {
         super.onCreate(context, state);
     }
 
     @Override
-    public ViewHolder onCreateViewHolder(final LayoutInflater inflater, final ViewGroup parent) {
-        return new ViewHolder() {
-            @Override
-            public View getView() {
-                return inflater.inflate(R.layout.fragment_dialog, parent, false);
-            }
-        };
+    public View onCreateView(final LayoutInflater inflater, final ViewGroup parent) {
+        return inflater.inflate(R.layout.fragment_dialog, parent, false);
     }
 
     @Override
@@ -56,13 +50,14 @@ public class SimpleFragmentDialog extends SimpleDialogFragment<SimpleFragment.Vi
                 })
                 .create();
     }
-    
+
     public void setOnAlertButtonClickedListener(OnAlertButtonClickedListener listener) {
         this.listener = listener;
     }
-    
+
     public interface OnAlertButtonClickedListener {
         void onOkClicked();
+
         void onCancelClicked();
     }
 }

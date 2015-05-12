@@ -20,12 +20,7 @@ public class TestNestedSimpleFragment extends SimpleFragment {
     }
 
     @Override
-    public ViewHolder onCreateViewHolder(final LayoutInflater inflater, final ViewGroup parent) {
-        return new ViewHolder() {
-            @Override
-            public View getView() {
-                return inflater.inflate(R.layout.fragment_layout_test, parent, false);
-            }
-        };
+    public View onCreateView(final LayoutInflater inflater, final ViewGroup parent) {
+        return inflater.inflate(R.layout.fragment_layout_test, parent, false);
     }
 }

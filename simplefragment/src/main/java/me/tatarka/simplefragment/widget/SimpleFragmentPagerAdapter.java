@@ -28,11 +28,11 @@ public abstract class SimpleFragmentPagerAdapter extends PagerAdapter {
     private LayoutInflater layoutInflater;
     private List<SimpleFragmentIntent> fragmentIntents;
     private SparseArray<SimpleFragmentKey> fragmentKeys;
-    
+
     public SimpleFragmentPagerAdapter(SimpleFragmentManagerProvider provider) {
         this(provider.getSimpleFragmentManager());
     }
-    
+
     public SimpleFragmentPagerAdapter(SimpleFragmentManagerProvider provider, LayoutInflater layoutInflater) {
         this(provider.getSimpleFragmentManager(), layoutInflater);
     }
@@ -50,7 +50,7 @@ public abstract class SimpleFragmentPagerAdapter extends PagerAdapter {
 
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
-        SimpleFragment<?> fragment = fm.find(fragmentKeys.get(position));
+        SimpleFragment fragment = fm.find(fragmentKeys.get(position));
         if (fragment == null) {
             SimpleFragmentIntent intent = getItem(position);
             if (intent == null) {
@@ -163,7 +163,7 @@ public abstract class SimpleFragmentPagerAdapter extends PagerAdapter {
      * @return The fragment, or null if no fragment has been instantiated for the given position.
      */
     @Nullable
-    public SimpleFragment<?> getFragmentForPosition(int position) {
+    public SimpleFragment getFragmentForPosition(int position) {
         if (position < 0 || position >= getCount()) {
             throw new IndexOutOfBoundsException();
         }

@@ -14,19 +14,14 @@ import me.tatarka.simplefragment.SimpleFragmentIntent;
 /**
  * Created by evan on 2/2/15.
  */
-public class SimpleFragmentFromLayout extends SimpleFragment<SimpleFragment.ViewHolder> {
+public class SimpleFragmentFromLayout extends SimpleFragment {
     @Override
     public void onCreate(Context context, @Nullable Bundle state) {
-        
+
     }
 
     @Override
-    public ViewHolder onCreateViewHolder(final LayoutInflater inflater, final ViewGroup parent) {
-        return new ViewHolder() {
-            @Override
-            public View getView() {
-                return inflater.inflate(R.layout.fragment_from_layout, parent, false);
-            }
-        };
+    public View onCreateView(final LayoutInflater inflater, final ViewGroup parent) {
+        return inflater.inflate(R.layout.fragment_from_layout, parent, false);
     }
 }
