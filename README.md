@@ -22,9 +22,10 @@ public class HelloWorldFragment extends SimpleFragment<SimpleFragment.ViewHolder
         @Override
         public void onResult(String result) {
           helloText = result;
-          Holder holder = getViewHolder();
-          if (holder != null) {
-            holder.text.setText(helloText);
+          View view = getView();
+          if (view != null) {
+            TextView text = view.findViewById(R.id.text);
+            text.setText(helloText);
           }
         }
       });
@@ -32,35 +33,22 @@ public class HelloWorldFragment extends SimpleFragment<SimpleFragment.ViewHolder
   }
     
   @Override
-  public void onSave(Context context, Bundle state) {
+  public void onSave(Bundle state) {
     state.putString(STATE_HELLO_TEXT, helloText);
   }
   
   @Override
-  public ViewHolder onCreateViewHolder(final LayoutInflater inflater, final ViewGroup parent) {
-    View view = inflater.inflate(R.layout.hello_world, parent, false);
-    return new Holder(view);
+  public View onCreateView(final LayoutInflater inflater, final ViewGroup parent) {
+    return inflater.inflate(R.layout.hello_world, parent, false);
   }
   
-  class Holder implements SimpleFragment.ViewHolder {
-    View view;
-    TextView text;
-    
-    Holder(View view) {
-      this.view = view;
-      this.text = view.findViewById(R.id.text);
-      this.text.setText(helloText);
-    }
-  
-    @Override
-    public View getView() {
-      return view;
-    }
+  @Override
+  public void onViewCreated(View view) {
+    TextView text = (TextView) view.findViewById(R.id.text);
+    text.setText(helloText);
   }
 }
 ```
-
-You'll notice that each SimpleFragment is made up of two distinct objects. The outer `SimpleFragment`, and an inner `SimpleFragment.ViewHolder`. The reason for this is to force you to seperate configuration-based code from nonconfigution-based code. This is due to one of the major differences of SimpleFragment over native ones. They are _not_ destroyed on configuration changes. This allows you to make network and other assyncrouns calls right in the fragment without issue.
 
 In order to use SimpleFragments in an Activity you should subclass `SimpleFragmentActivity` or `SimpleFragmentActionBarActivity`. You can then either add the SimpleFragment in the layout
 ```xml
