@@ -15,8 +15,8 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatCallback;
 import android.support.v7.app.AppCompatDelegate;
-import android.support.v7.view.ActionMode;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.view.ActionMode;
 import android.util.AttributeSet;
 import android.view.MenuInflater;
 import android.view.View;
@@ -192,6 +192,11 @@ public class SimpleFragmentAppCompatActivity extends Activity implements SimpleF
     @Override
     public void onSupportActionModeFinished(ActionMode mode) {
 
+    }
+    
+    @Override
+    public ActionMode onWindowStartingSupportActionMode(ActionMode.Callback callback) {
+        return null;
     }
 
     public ActionMode startSupportActionMode(ActionMode.Callback callback) {

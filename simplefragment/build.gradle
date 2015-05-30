@@ -30,7 +30,7 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:22.1.0'
+    compile 'com.android.support:support-v4:22.2.0'
 
     testCompile 'junit:junit:4.10'
     testCompile 'org.assertj:assertj-core:1.7.1'
