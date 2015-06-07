@@ -82,7 +82,7 @@ public class SimpleFragmentManagerTest {
         TestSimpleFragment fragment = manager.create(intent, new TestKey());
         manager.createView(fragment, layoutInflater, view);
 
-        assertThat(fragment.wasOnCreateViewHolderCalled).isTrue();
+        assertThat(fragment.wasOnCreateViewCalled).isTrue();
     }
 
     @Test

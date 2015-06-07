@@ -11,20 +11,19 @@ import android.widget.Toast;
 
 import me.tatarka.simplefragment.SimpleFragment;
 import me.tatarka.simplefragment.SimpleFragmentContainer;
-import me.tatarka.simplefragment.SimpleFragmentDialogContainer;
 import me.tatarka.simplefragment.SimpleFragmentIntent;
 
 /**
  * Created by evan on 3/21/15.
  */
 public class SimpleFragmentDialogs extends SimpleFragment {
-    SimpleFragmentDialogContainer container;
+    SimpleFragmentContainer container;
 
     @Override
     public void onCreate(final Context context, @Nullable Bundle state) {
-        container = SimpleFragmentDialogContainer.getInstance(this);
+        container = SimpleFragmentContainer.getInstance(this);
 
-        SimpleFragmentDialog dialogFragment = (SimpleFragmentDialog) container.find("dialog");
+        SimpleFragmentDialog dialogFragment = (SimpleFragmentDialog) container.findDialog("dialog");
         if (dialogFragment != null) {
             setDialogListener(dialogFragment);
         }
@@ -40,7 +39,7 @@ public class SimpleFragmentDialogs extends SimpleFragment {
         view.findViewById(R.id.show_dialog).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final SimpleFragmentDialog dialogFragment = container.add(new SimpleFragmentIntent<>(SimpleFragmentDialog.class), "dialog");
+                final SimpleFragmentDialog dialogFragment = container.addDialog(new SimpleFragmentIntent<>(SimpleFragmentDialog.class), "dialog");
                 setDialogListener(dialogFragment);
                 dialogFragment.show();
             }

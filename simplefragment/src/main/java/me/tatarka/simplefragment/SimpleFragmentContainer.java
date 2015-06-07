@@ -4,9 +4,7 @@ import android.content.Context;
 import android.os.Parcel;
 import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,9 +13,10 @@ import java.util.List;
 import java.util.Map;
 
 import me.tatarka.simplefragment.backstack.SimpleFragmentBackStack;
+import me.tatarka.simplefragment.key.DialogKey;
 import me.tatarka.simplefragment.key.LayoutKey;
+import me.tatarka.simplefragment.key.SimpleFragmentContainerKey;
 import me.tatarka.simplefragment.key.SimpleFragmentKey;
-import me.tatarka.simplefragment.util.ResUtil;
 
 /**
  * A container where you can directly add and remove fragments to the view hierarchy. It also
@@ -29,8 +28,8 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
     private SimpleFragmentManager fm;
     private SimpleFragmentKey parentKey;
     private View rootView;
-    private List<LayoutKey> attachedKeys;
-    private Map<LayoutKey, SimpleFragment> fragmentsPendingAttach;
+    private List<SimpleFragmentContainerKey> attachedKeys;
+    private Map<SimpleFragmentContainerKey, SimpleFragment> fragmentsPendingAttach;
     private SimpleFragmentBackStack backStack;
 
     public static SimpleFragmentContainer getInstance(SimpleFragmentContainerManagerProvider provider) {
@@ -59,18 +58,22 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
         this.backStack.addListener(parentKey, new BackStackListener());
     }
 
+    public SimpleFragmentManager getFragmentManager() {
+        return fm;
+    }
+
     @Override
     public void onAttachView(View rootView) {
         this.rootView = rootView;
 
         // Restore previously attached fragments.
-        for (LayoutKey key : attachedKeys) {
+        for (SimpleFragmentKey key : attachedKeys) {
             SimpleFragment childFragment = fm.find(key);
             attachFragment(rootView, childFragment);
         }
 
         // View is ready, we can createView all pending fragments now.
-        for (Map.Entry<LayoutKey, SimpleFragment> entry : fragmentsPendingAttach.entrySet()) {
+        for (Map.Entry<SimpleFragmentContainerKey, SimpleFragment> entry : fragmentsPendingAttach.entrySet()) {
             attachFragment(rootView, entry.getValue());
             attachedKeys.add(entry.getKey());
         }
@@ -79,11 +82,10 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
 
     @Override
     public void onClearView() {
-        for (LayoutKey key : attachedKeys) {
-            ViewGroup parentView = (ViewGroup) rootView.findViewById(key.getViewId());
+        for (SimpleFragmentContainerKey key : attachedKeys) {
             SimpleFragment fragment = fm.find(key);
-            View view = fm.destroyView(fragment);
-            parentView.removeView(view);
+            key.detach(this, rootView, fragment);
+
         }
         rootView = null;
     }
@@ -95,12 +97,11 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeTypedList(attachedKeys);
+        dest.writeList(attachedKeys);
     }
 
     private SimpleFragmentContainer(Parcel in) {
-        this.attachedKeys = new ArrayList<>();
-        in.readTypedList(this.attachedKeys, LayoutKey.CREATOR);
+        this.attachedKeys = in.readArrayList(getClass().getClassLoader());
     }
 
     public static final Creator<SimpleFragmentContainer> CREATOR = new Creator<SimpleFragmentContainer>() {
@@ -122,7 +123,14 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
      * @return The created fragment.
      */
     public <T extends SimpleFragment> T add(SimpleFragmentIntent<T> intent, @IdRes int viewId) {
-        SimpleFragmentKey key = new LayoutKey(parentKey, viewId);
+        return add(intent, new LayoutKey(parentKey, viewId));
+    }
+
+    public <T extends SimpleFragment> T addDialog(SimpleFragmentIntent<T> intent, String tag) {
+        return add(intent, new DialogKey(parentKey, tag));
+    }
+
+    public <T extends SimpleFragment> T add(SimpleFragmentIntent<T> intent, SimpleFragmentContainerKey key) {
         T fragment = fm.create(intent, key);
         maybeAttachFragment(rootView, fragment);
         return fragment;
@@ -137,15 +145,22 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
      * @param <T>    The fragment class.
      * @return The created fragment.
      */
-    @SuppressWarnings("unchecked")
     public <T extends SimpleFragment> T findOrAdd(SimpleFragmentIntent<T> intent, @IdRes int viewId) {
-        for (LayoutKey key : attachedKeys) {
-            if (key.getViewId() == viewId) {
-                return (T) fm.find(key);
+        return findOrAdd(intent, new LayoutKey(parentKey, viewId));
+    }
 
+    public <T extends SimpleFragment> T findOrAddDialog(SimpleFragmentIntent<T> intent, String tag) {
+        return findOrAdd(intent, new DialogKey(parentKey, tag));
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends SimpleFragment> T findOrAdd(SimpleFragmentIntent<T> intent, SimpleFragmentContainerKey key) {
+        for (SimpleFragmentContainerKey testKey : attachedKeys) {
+            if (testKey.equals(key)) {
+                return (T) fm.find(key);
             }
         }
-        return add(intent, viewId);
+        return add(intent, key);
     }
 
     /**
@@ -154,16 +169,17 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
      * @param fragment The fragment to remove.
      */
     public void remove(SimpleFragment fragment) {
-        LayoutKey key = (LayoutKey) fragment.getKey();
+        SimpleFragmentContainerKey key = (SimpleFragmentContainerKey) fragment.getKey();
         attachedKeys.remove(key);
-        if (!backStack.remove(key)) {
-            if (fragment.getView() != null) {
-                ViewGroup parentView = (ViewGroup) fragment.getView().getParent();
-                View view = fm.destroyView(fragment);
-                parentView.removeView(view);
-            }
-            fm.destroy(fragment);
+
+        if (key instanceof LayoutKey && backStack.remove((LayoutKey) key)) {
+            return;
         }
+
+        if (fragment.getView() != null) {
+            key.detach(this, rootView, fragment);
+        }
+        fm.destroy(fragment);
     }
 
     /**
@@ -173,8 +189,25 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
      * @return The fragment or null if it cannot be found.
      */
     public SimpleFragment find(@IdRes int viewId) {
-        for (LayoutKey key : attachedKeys) {
-            if (key.getViewId() == viewId) {
+        // We can't just search for a LayoutKey because we don't know the index in the backstack.
+        for (SimpleFragmentContainerKey testKey : attachedKeys) {
+            if (testKey instanceof LayoutKey) {
+                LayoutKey key = (LayoutKey) testKey;
+                if (equals(parentKey, key.getParent()) && key.getViewId() == viewId) {
+                    return fm.find(key);
+                }
+            }
+        }
+        return null;
+    }
+
+    public SimpleFragment findDialog(String tag) {
+        return find(new DialogKey(parentKey, tag));
+    }
+
+    public SimpleFragment find(SimpleFragmentContainerKey key) {
+        for (SimpleFragmentContainerKey testKey : attachedKeys) {
+            if (testKey.equals(key)) {
                 return fm.find(key);
             }
         }
@@ -192,7 +225,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
         List<SimpleFragment> fragments = new ArrayList<>();
         for (SimpleFragment fragment : fm.getFragments()) {
             SimpleFragmentKey key = fragment.getKey();
-            if (key instanceof LayoutKey && equals(((LayoutKey) key).getParent(), parentKey)) {
+            if (key instanceof SimpleFragmentContainerKey && equals(((SimpleFragmentContainerKey) key).getParent(), parentKey)) {
                 fragments.add(fragment);
             }
         }
@@ -207,7 +240,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
      */
     public List<SimpleFragment> getAttachedFragments() {
         List<SimpleFragment> fragments = new ArrayList<>(attachedKeys.size());
-        for (LayoutKey key : attachedKeys) {
+        for (SimpleFragmentContainerKey key : attachedKeys) {
             fragments.add(fm.find(key));
         }
         return Collections.unmodifiableList(fragments);
@@ -268,7 +301,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
      * root view is set.
      */
     private void maybeAttachFragment(View rootView, SimpleFragment fragment) {
-        LayoutKey key = (LayoutKey) fragment.getKey();
+        SimpleFragmentContainerKey key = (SimpleFragmentContainerKey) fragment.getKey();
         if (rootView != null) {
             attachFragment(rootView, fragment);
             attachedKeys.add(key);
@@ -281,18 +314,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
      * Attaches the fragment to the rootView given it's path.
      */
     private void attachFragment(View rootView, SimpleFragment fragment) {
-        LayoutKey key = (LayoutKey) fragment.getKey();
-        int viewId = key.getViewId();
-        View parentView = rootView.findViewById(viewId);
-        if (parentView == null) {
-            throw new IllegalArgumentException("Cannot find view with id '" + ResUtil.safeGetIdName(fm.getContext().getResources(), viewId) + "'.");
-        }
-        if (!(parentView instanceof ViewGroup)) {
-            throw new IllegalArgumentException("View with id '" + ResUtil.safeGetIdName(fm.getContext().getResources(), viewId) + "' is not an instance of ViewGroup.");
-        }
-        ViewGroup parent = (ViewGroup) parentView;
-        View view = fm.createView(fragment, LayoutInflater.from(rootView.getContext()), parent);
-        parent.addView(view);
+        ((SimpleFragmentContainerKey) fragment.getKey()).attach(this, rootView, fragment);
     }
 
     public Context getContext() {
@@ -302,13 +324,10 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
     private class BackStackListener implements SimpleFragmentBackStack.BackStackListener {
         @Override
         public void onReplace(SimpleFragment oldFragment, SimpleFragment newFragment) {
-            LayoutKey oldKey = (LayoutKey) oldFragment.getKey();
+            SimpleFragmentContainerKey oldKey = (SimpleFragmentContainerKey) oldFragment.getKey();
             attachedKeys.remove(oldKey);
             if (rootView != null) {
-                int viewId = oldKey.getViewId();
-                ViewGroup parentView = (ViewGroup) rootView.findViewById(viewId);
-                View view = fm.destroyView(oldFragment);
-                parentView.removeView(view);
+                oldKey.detach(SimpleFragmentContainer.this, rootView, oldFragment);
             }
             maybeAttachFragment(rootView, newFragment);
         }

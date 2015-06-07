@@ -34,12 +34,21 @@ public final class SimpleFragmentIntent<T extends SimpleFragment> implements Par
         return this;
     }
     
+    public SimpleFragmentIntent<T> putArg(String key, Parcelable value) {
+        args.putParcelable(key, value);
+        return this;
+    }
+    
     public int getIntArg(String key) {
         return args.getInt(key);
     }
     
     public int getIntArg(String key, int defaultValue) {
         return args.getInt(key, defaultValue);
+    }
+    
+    public int getParcelableArg(String key) {
+        return args.getParcelable(key);
     }
 
     public String getSimpleFragmentClassName() {

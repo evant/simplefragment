@@ -103,7 +103,8 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
     /**
      * Returns the view attached to the fragment. Since the lifecycle of the SimpleFragment is
      * longer than the view, you must not keep a reference to it. It also may be null if you are not
-     * between the lifecycle events {@link #onViewCreated(View)} and {@link #onViewDestroyed(View)}.
+     * between the lifecycle events {@link #onViewCreated(View)} and {@link
+     * #onViewDestroyed(View)}.
      */
     @Nullable
     public View getView() {
@@ -126,6 +127,14 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
 
     public SimpleFragmentIntent getIntent() {
         return state.intent;
+    }
+
+    /**
+     * Returns the layoutInflater for the given SimpleFragment, you may override this to customize
+     * the inflater.
+     */
+    public LayoutInflater getLayoutInflater() {
+        return LayoutInflater.from(fm.getContext());
     }
 
     State getState() {
