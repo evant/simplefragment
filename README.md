@@ -7,7 +7,7 @@ The purpose of this library is to build a better foundation for working with the
 
 Here an example of a SimpleFragment that gets a string from a network call and populates a `TextView`.
 ```java
-public class HelloWorldFragment extends SimpleFragment<SimpleFragment.ViewHolder> {
+public class HelloWorldFragment extends SimpleFragment {
   static final String STATE_HELLO_TEXT = "STATE_HELLO_TEXT";
   String helloText;
   
