@@ -28,8 +28,8 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
     private SimpleFragmentManager fm;
     private SimpleFragmentKey parentKey;
     private View rootView;
-    private List<SimpleFragmentContainerKey> attachedKeys;
-    private Map<SimpleFragmentContainerKey, SimpleFragment> fragmentsPendingAttach;
+    private final List<SimpleFragmentContainerKey> attachedKeys = new ArrayList<>();
+    private final Map<SimpleFragmentContainerKey, SimpleFragment> fragmentsPendingAttach = new HashMap<>();
     private SimpleFragmentBackStack backStack;
 
     public static SimpleFragmentContainer getInstance(SimpleFragmentContainerManagerProvider provider) {
@@ -47,8 +47,6 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
     }
 
     private SimpleFragmentContainer() {
-        this.attachedKeys = new ArrayList<>();
-        this.fragmentsPendingAttach = new HashMap<>();
     }
 
     private void setManager(SimpleFragmentContainerManager cm) {
@@ -101,7 +99,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
     }
 
     private SimpleFragmentContainer(Parcel in) {
-        this.attachedKeys = in.readArrayList(getClass().getClassLoader());
+        in.readList(this.attachedKeys, getClass().getClassLoader());
     }
 
     public static final Creator<SimpleFragmentContainer> CREATOR = new Creator<SimpleFragmentContainer>() {
