@@ -125,7 +125,7 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
         return cm;
     }
 
-    public SimpleFragmentIntent getIntent() {
+    public SimpleFragmentIntent<?> getIntent() {
         return state.intent;
     }
 
@@ -165,7 +165,7 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
     }
 
     private static class State implements Parcelable {
-        private SimpleFragmentIntent intent;
+        private SimpleFragmentIntent<?> intent;
         private Bundle state;
         private SimpleFragmentKey key;
         private Parcelable cmState;
