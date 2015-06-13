@@ -67,8 +67,7 @@ public class MyActivity extends SimpleFragmentActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    container = SimpleFragmentContainer.getInstance(this);
-    container.findOrAdd(new SimpleFragmentIntent<>(HelloWorldFragment.class), R.id.my_fragment);
+    getSimpleFragmentContainer().findOrAdd(new SimpleFragmentIntent<>(HelloWorldFragment.class), R.id.my_fragment);
   }
 }
 ```
