@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import me.tatarka.simplefragment.activity.SimpleFragmentDelegate;
 import me.tatarka.simplefragment.backstack.SimpleFragmentBackStack;
 import me.tatarka.simplefragment.key.LayoutKey;
 import me.tatarka.simplefragment.key.SimpleFragmentContainerKey;
@@ -101,8 +102,8 @@ public class SimpleFragmentManager implements SimpleFragmentManagerProvider {
     public <T extends SimpleFragment> T findOrAdd(SimpleFragmentIntent<T> intent, SimpleFragmentContainerKey key) {
         SimpleFragmentContainerKey nestedKey = key.withParent(parentKey);
         for (SimpleFragmentContainerKey testKey : attachedKeys) {
-            if (testKey.equals(nestedKey)) {
-                return (T) stateManager.find(nestedKey);
+            if (testKey.matches(nestedKey)) {
+                return (T) stateManager.find(testKey);
             }
         }
         return add(intent, key);
@@ -234,7 +235,7 @@ public class SimpleFragmentManager implements SimpleFragmentManagerProvider {
         ((SimpleFragmentContainerKey) fragment.getKey()).attach(this, rootView, fragment);
     }
 
-    public Activity getActivity() {
+    public <A extends Activity & SimpleFragmentDelegate.Methods> A getActivity() {
         return stateManager.getActivity();
     }
 

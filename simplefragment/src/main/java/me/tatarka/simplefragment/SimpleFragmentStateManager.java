@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import me.tatarka.simplefragment.activity.SimpleFragmentDelegate;
 import me.tatarka.simplefragment.backstack.SimpleFragmentBackStack;
 import me.tatarka.simplefragment.key.LayoutKey;
 import me.tatarka.simplefragment.key.SimpleFragmentKey;
@@ -28,13 +29,17 @@ public class SimpleFragmentStateManager {
     private SimpleFragmentBackStack backStack;
 
     public SimpleFragmentStateManager(Activity activity) {
+        if (!(activity instanceof SimpleFragmentDelegate.Methods)) {
+            throw new IllegalArgumentException(activity + " must implement SimpleFragmentDelegate.Methods");
+        }
         this.activity = activity;
         this.fragments = new ArrayList<>();
         this.backStack = new SimpleFragmentBackStack(this);
     }
 
-    public Activity getActivity() {
-        return activity;
+    @SuppressWarnings("unchecked")
+    public <A extends Activity & SimpleFragmentDelegate.Methods> A getActivity() {
+        return (A) activity;
     }
 
     public List<SimpleFragment> getFragments() {

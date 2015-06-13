@@ -15,7 +15,7 @@ import me.tatarka.simplefragment.SimpleFragment;
 /**
  * Created by evan on 2/2/15.
  */
-public class SimpleFragmentChildWithBackStack extends SimpleFragment {
+public class FragmentChildWithBackStack extends SimpleFragment {
     public static final String ARG_VIEW_ID = "view_id";
     public static final String ARG_STACK_COUNT = "stack_count";
 
@@ -51,7 +51,7 @@ public class SimpleFragmentChildWithBackStack extends SimpleFragment {
             @Override
             public void onClick(View v) {
                 if (stackCount > 0) {
-                    getListener().onRemove(SimpleFragmentChildWithBackStack.this);
+                    getListener().onRemove(FragmentChildWithBackStack.this);
                 }
             }
         });
@@ -69,7 +69,7 @@ public class SimpleFragmentChildWithBackStack extends SimpleFragment {
     public interface OnBackStackRequestListener {
         void onAdd(int viewId, int stackCount);
 
-        void onRemove(SimpleFragmentChildWithBackStack fragment);
+        void onRemove(FragmentChildWithBackStack fragment);
     }
 
     private static final OnBackStackRequestListener EMPTY_LISTENER = new OnBackStackRequestListener() {
@@ -79,7 +79,7 @@ public class SimpleFragmentChildWithBackStack extends SimpleFragment {
         }
 
         @Override
-        public void onRemove(SimpleFragmentChildWithBackStack fragment) {
+        public void onRemove(FragmentChildWithBackStack fragment) {
 
         }
     };

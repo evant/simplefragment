@@ -1,18 +1,21 @@
 package me.tatarka.simplefragment.activity;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.ViewGroup;
 
+import me.tatarka.simplefragment.SimpleFragment;
 import me.tatarka.simplefragment.SimpleFragmentManager;
 import me.tatarka.simplefragment.SimpleFragmentManagerProvider;
-import me.tatarka.simplefragment.SimpleFragmentStateManager;
 
 /**
  * Created by evan on 3/7/15.
  */
-public class SimpleFragmentActivity extends Activity implements SimpleFragmentManagerProvider {
+public class SimpleFragmentActivity extends Activity implements SimpleFragmentManagerProvider, SimpleFragmentDelegate.Methods {
     private SimpleFragmentDelegate delegate;
 
     @Override
@@ -72,6 +75,31 @@ public class SimpleFragmentActivity extends Activity implements SimpleFragmentMa
     }
 
     @Override
+    public void startActivityFromFragment(SimpleFragment fragment, Intent intent, int requestCode, @Nullable Bundle options) {
+        int maskedRequestCode = getSimpleFragmentDelegate().getMaskedRequestCode(fragment, requestCode);
+        if (Build.VERSION.SDK_INT >= 16) {
+            super.startActivityForResult(intent, maskedRequestCode, options);
+        } else {
+            super.startActivityForResult(intent, maskedRequestCode);
+        }
+    }
+
+    @Override
+    public void startActivityForResult(Intent intent, int requestCode) {
+        getSimpleFragmentDelegate().startActivityForResult(intent, requestCode, null);
+    }
+
+    @Override
+    public void startActivityForResult(Intent intent, int requestCode, Bundle options) {
+        getSimpleFragmentDelegate().startActivityForResult(intent, requestCode, options);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        getSimpleFragmentDelegate().onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
     public void onBackPressed() {
         if (!getSimpleFragmentDelegate().onBackPress()) {
             super.onBackPressed();
@@ -89,4 +117,5 @@ public class SimpleFragmentActivity extends Activity implements SimpleFragmentMa
         }
         return delegate;
     }
+
 }

@@ -16,7 +16,7 @@ import me.tatarka.simplefragment.key.DialogKey;
 /**
  * Created by evan on 3/21/15.
  */
-public class SimpleFragmentDialogs extends SimpleFragment implements SimpleFragmentDialog.OnAlertButtonClickedListener {
+public class FragmentDialogs extends SimpleFragment implements FragmentDialog.OnAlertButtonClickedListener {
     private static final DialogKey DIALOG_KEY = DialogKey.of("dialog");
 
     @Override
@@ -33,7 +33,7 @@ public class SimpleFragmentDialogs extends SimpleFragment implements SimpleFragm
         view.findViewById(R.id.show_dialog).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getSimpleFragmentManager().add(SimpleFragmentIntent.of(SimpleFragmentDialog.class), DIALOG_KEY).show();
+                getSimpleFragmentManager().add(SimpleFragmentIntent.of(FragmentDialog.class), DIALOG_KEY).show();
             }
         });
     }

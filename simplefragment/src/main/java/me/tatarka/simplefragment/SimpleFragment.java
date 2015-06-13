@@ -1,7 +1,9 @@
 package me.tatarka.simplefragment;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -11,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import me.tatarka.simplefragment.activity.SimpleFragmentDelegate;
 import me.tatarka.simplefragment.key.SimpleFragmentKey;
 
 /**
@@ -40,6 +43,9 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider {
 
     public boolean onBackPressed() {
         return false;
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
     }
 
     final void create(SimpleFragmentStateManager stateManager, SimpleFragmentIntent intent, SimpleFragmentKey key) {
@@ -125,7 +131,7 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider {
         return state.intent;
     }
 
-    public Activity getActivity() {
+    public <A extends Activity & SimpleFragmentDelegate.Methods> A getActivity() {
         return manager.getActivity();
     }
 
@@ -153,6 +159,15 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider {
      */
     public LayoutInflater getLayoutInflater() {
         return LayoutInflater.from(stateManager.getActivity());
+    }
+
+    public void startActivityForResult(Intent intent, int requestCode) {
+        startActivityForResult(intent, requestCode, null);
+    }
+
+    @TargetApi(16)
+    public void startActivityForResult(Intent intent, int requestCode, @Nullable Bundle options) {
+        getActivity().startActivityFromFragment(this, intent, requestCode, options);
     }
 
     State getState() {

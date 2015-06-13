@@ -15,9 +15,10 @@ import me.tatarka.simplefragment.widget.SimpleFragmentPagerAdapter;
 
 public class MainActivity extends SimpleFragmentAppCompatActivity {
     private static final List<Class<? extends SimpleFragment>> FRAGMENTS = Arrays.asList(
-            SimpleFragmentFromLayout.class,
-            SimpleFragmentWithBackStack.class,
-            SimpleFragmentDialogs.class
+            FragmentFromLayout.class,
+            FragmentWithBackStack.class,
+            FragmentDialogs.class,
+            FragmentActivityForResult.class
     );
 
     @Override

@@ -14,7 +14,7 @@ import me.tatarka.simplefragment.SimpleFragmentIntent;
 /**
  * Created by evan on 2/2/15.
  */
-public class SimpleFragmentChildFromLayout extends SimpleFragment {
+public class FragmentFromLayout extends SimpleFragment {
     @Override
     public void onCreate(Context context, @Nullable Bundle state) {
 
@@ -22,6 +22,6 @@ public class SimpleFragmentChildFromLayout extends SimpleFragment {
 
     @Override
     public View onCreateView(final LayoutInflater inflater, final ViewGroup parent) {
-        return inflater.inflate(R.layout.fragment_child_from_layout, parent, false);
+        return inflater.inflate(R.layout.fragment_from_layout, parent, false);
     }
 }

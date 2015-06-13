@@ -1,23 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <fragment
+    <FrameLayout
         android:id="@+id/child_fragment1"
-        android:name="me.tatarka.simplefragment.sample.FragmentChildFromLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        tools:layout="@layout/fragment_child_from_layout" />
+        android:layout_weight="1" />
 
-    <fragment
+    <FrameLayout
         android:id="@+id/child_fragment2"
-        android:name="me.tatarka.simplefragment.sample.FragmentChildFromLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        tools:layout="@layout/fragment_child_from_layout" />
+        android:layout_weight="1" />
 </LinearLayout>

@@ -15,7 +15,7 @@ import me.tatarka.simplefragment.SimpleDialogFragment;
 /**
  * Created by evan on 3/22/15.
  */
-public class SimpleFragmentDialog extends SimpleDialogFragment {
+public class FragmentDialog extends SimpleDialogFragment {
     @Override
     public void onCreate(Context context, @Nullable Bundle state) {
         super.onCreate(context, state);

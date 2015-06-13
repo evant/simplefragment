@@ -1,7 +1,10 @@
 package me.tatarka.simplefragment.activity;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -14,13 +17,18 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 
+import java.util.List;
+
+import me.tatarka.simplefragment.SimpleFragment;
 import me.tatarka.simplefragment.SimpleFragmentManager;
 import me.tatarka.simplefragment.SimpleFragmentManagerProvider;
 import me.tatarka.simplefragment.SimpleFragmentStateManager;
 import me.tatarka.simplefragment.SimpleFragmentViewInflater;
 
 /**
- * Created by evan on 3/7/15.
+ * A delegate class for implementing SimpleFragments in your own Activity. While there are a lot of
+ * methods, implementing is mostly a matter of overriding all the methods with the same name and
+ * calling the delegate. See {@link SimpleFragmentActivity} for an example on how this is done.
  */
 public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, LayoutInflaterFactory {
     private static final String TAG = "SimpleFragmentDelegate";
@@ -149,6 +157,50 @@ public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, La
 
     public boolean onBackPress() {
         return stateManager.getBackStack().pop();
+    }
+
+    public interface Methods {
+        void startActivityFromFragment(SimpleFragment fragment, Intent intent, int requestCode, @Nullable Bundle options);
+    }
+
+    public int getMaskedRequestCode(SimpleFragment fragment, int requestCode) {
+        if (requestCode == -1) {
+            return -1;
+        }
+        if ((requestCode & 0xffff0000) != 0) {
+            throw new IllegalArgumentException("Can only use lower 16 bits for requestCode");
+        }
+        int index = stateManager.getFragments().indexOf(fragment);
+        return ((index + 1) << 16) + (requestCode & 0xffff);
+    }
+
+    @TargetApi(16)
+    public void startActivityForResult(Intent intent, int requestCode, @Nullable Bundle options) {
+        if (requestCode != -1 && (requestCode & 0xffff0000) != 0) {
+            throw new IllegalArgumentException("Can only use lower 16 bits for requestCode");
+        }
+        if (Build.VERSION.SDK_INT >= 16) {
+            activity.startActivityForResult(intent, requestCode, options);
+        } else {
+            activity.startActivityForResult(intent, requestCode);
+        }
+    }
+
+    public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
+        int index = requestCode >> 16;
+        if (index != 0) {
+            index--;
+            List<SimpleFragment> fragments = stateManager.getFragments();
+            if (index < 0 || index >= fragments.size()) {
+                Log.w(TAG, "Activity result fragment index out of range: 0x"
+                        + Integer.toHexString(requestCode));
+            } else {
+                SimpleFragment fragment = fragments.get(index);
+                fragment.onActivityResult(requestCode & 0xffff, resultCode, data);
+                return true;
+            }
+        }
+        return false;
     }
 
     private static class NonConfigInstance {
