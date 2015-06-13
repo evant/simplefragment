@@ -15,11 +15,11 @@ import me.tatarka.simplefragment.key.SimpleFragmentKey;
 /**
  * Created by evan on 1/11/15.
  */
-public abstract class SimpleFragment implements SimpleFragmentManagerProvider, SimpleFragmentContainerManagerProvider {
+public abstract class SimpleFragment implements SimpleFragmentManagerProvider, SimpleFragmentContainerProvider {
     private View view;
     private State state = new State();
     private SimpleFragmentManager fm;
-    private SimpleFragmentContainerManager cm;
+    private SimpleFragmentContainer cm;
 
     public abstract void onCreate(Context context, @Nullable Bundle state);
 
@@ -43,7 +43,7 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
 
     final void create(SimpleFragmentManager fm, SimpleFragmentIntent intent, SimpleFragmentKey key) {
         this.fm = fm;
-        this.cm = new SimpleFragmentContainerManager(fm, key);
+        this.cm = new SimpleFragmentContainer(fm, key);
         state.intent = intent;
         state.key = key;
         onCreate(fm.getContext().getApplicationContext(), this.state.state);
@@ -76,7 +76,7 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
         this.state = (State) parcelable;
         this.state.state.setClassLoader(getClass().getClassLoader());
         this.fm = fm;
-        this.cm = new SimpleFragmentContainerManager(fm, state.key);
+        this.cm = new SimpleFragmentContainer(fm, state.key);
         this.cm.restoreState(state.cmState);
         this.onCreate(fm.getContext().getApplicationContext(), state.state);
     }
@@ -121,7 +121,7 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
     }
 
     @Override
-    public SimpleFragmentContainerManager getSimpleFragmentContainerManager() {
+    public SimpleFragmentContainer getSimpleFragmentContainer() {
         return cm;
     }
 
@@ -187,10 +187,10 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
         }
 
         State(Parcel in) {
-            this.intent = in.readParcelable(SimpleFragmentIntent.class.getClassLoader());
+            this.intent = in.readParcelable(getClass().getClassLoader());
             this.state = in.readBundle();
-            this.key = in.readParcelable(SimpleFragmentKey.class.getClassLoader());
-            this.cmState = in.readParcelable(SimpleFragmentContainerManager.class.getClassLoader());
+            this.key = in.readParcelable(getClass().getClassLoader());
+            this.cmState = in.readParcelable(getClass().getClassLoader());
         }
 
         public static final Parcelable.Creator<State> CREATOR = new Parcelable.Creator<State>() {

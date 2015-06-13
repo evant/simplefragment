@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import me.tatarka.simplefragment.backstack.SimpleFragmentBackStack;
 import me.tatarka.simplefragment.key.LayoutKey;
 import me.tatarka.simplefragment.key.SimpleFragmentKey;
 
@@ -27,12 +28,12 @@ import me.tatarka.simplefragment.key.SimpleFragmentKey;
 public class SimpleFragmentManager {
     private Context context;
     private List<SimpleFragment> fragments;
-    private Map<ExtraKey<?>, ExtraValue> extras;
+    private SimpleFragmentBackStack backStack;
 
     public SimpleFragmentManager(Context context) {
         this.context = context;
         this.fragments = new ArrayList<>();
-        this.extras = new HashMap<>();
+        this.backStack = new SimpleFragmentBackStack(this);
     }
 
     public Context getContext() {
@@ -41,6 +42,10 @@ public class SimpleFragmentManager {
 
     public List<SimpleFragment> getFragments() {
         return Collections.unmodifiableList(fragments);
+    }
+    
+    public SimpleFragmentBackStack getBackStack() {
+        return backStack;
     }
 
     @Nullable
@@ -152,7 +157,7 @@ public class SimpleFragmentManager {
 
         // To support <fragment> tags in nested layouts, we need a custom inflater.
         LayoutInflater fragmentInflater = layoutInflater.cloneInContext(context);
-        LayoutInflaterCompat.setFactory(fragmentInflater, new SimpleFragmentViewInflater(SimpleFragmentContainer.getInstance(fragment)));
+        LayoutInflaterCompat.setFactory(fragmentInflater, new SimpleFragmentViewInflater(fragment.getSimpleFragmentContainer()));
 
         return fragment.createView(fragmentInflater, parentView);
     }
@@ -181,21 +186,13 @@ public class SimpleFragmentManager {
             SimpleFragment fragment = fragments.get(i);
             fragmentStates[i] = fragment.saveState();
         }
-        Map<String, Parcelable> extraStates = new HashMap<>(extras.size());
-        for (Map.Entry<ExtraKey<?>, ExtraValue> entry : extras.entrySet()) {
-            extraStates.put(entry.getKey().name, entry.getValue());
-        }
-        return new State(fragmentStates, extraStates);
+        return new State(fragmentStates, backStack.saveState());
     }
 
     public void restoreState(Parcelable parcelable) {
         State state = (State) parcelable;
-        extras = new HashMap<>(state.extraStates.size());
-        for (Map.Entry<String, Parcelable> entry : state.extraStates.entrySet()) {
-            ExtraKey<?> key = new ExtraKey<>(entry.getKey());
-            ExtraValue value = (ExtraValue) entry.getValue();
-            extras.put(key, value);
-        }
+        backStack.restoreState(state.backStackState);
+        
         // We need to loop twice, once to add all the fragments to the manager, and once to restore
         // their states. This is so fragments will always see their children as existing.
         fragments = new ArrayList<>(state.fragmentStates.length);
@@ -226,46 +223,6 @@ public class SimpleFragmentManager {
     }
 
     /**
-     * Attach an arbitrary value to the {@code SimpleFragmentManager} that will be persisted with
-     * it. This allows easy access to that value across anything that has a reference to the
-     * manager.
-     *
-     * @param key   The key to store the extra with. Must be something unique (like a class name).
-     * @param value The value to store.
-     * @param <T>   The type of the value.
-     * @see me.tatarka.simplefragment.SimpleFragmentManager.ExtraKey
-     */
-    public <T extends ExtraValue> void putExtra(ExtraKey<T> key, T value) {
-        extras.put(key, value);
-    }
-
-    /**
-     * Get the extra with the given key.
-     *
-     * @param key The key.
-     * @param <T> The type fo the value.
-     * @return The extra value.
-     * @see #putExtra(ExtraKey, ExtraValue)
-     */
-    @SuppressWarnings("unchecked")
-    public <T extends ExtraValue> T getExtra(ExtraKey<T> key) {
-        return (T) extras.get(key);
-    }
-
-    /**
-     * Removes the extra with the given key and returns it.
-     *
-     * @param key The key.
-     * @param <T> The type fo the value.
-     * @return The extra value.
-     * @see #putExtra(ExtraKey, ExtraValue)
-     */
-    @SuppressWarnings("unchecked")
-    public <T extends ExtraValue> T removeExtra(ExtraKey<T> key) {
-        return (T) extras.remove(key);
-    }
-
-    /**
      * Restores references to configuration state and restores all fragments that were detaches with
      * {@link #clearConfigurationState()}.
      *
@@ -277,11 +234,11 @@ public class SimpleFragmentManager {
 
     private static class State implements Parcelable {
         Parcelable[] fragmentStates;
-        Map<String, Parcelable> extraStates;
+        Parcelable backStackState;
 
-        State(Parcelable[] fragmentStates, Map<String, Parcelable> extraStates) {
+        State(Parcelable[] fragmentStates, Parcelable backStackState) {
             this.fragmentStates = fragmentStates;
-            this.extraStates = extraStates;
+            this.backStackState = backStackState;
         }
 
         @Override
@@ -292,13 +249,13 @@ public class SimpleFragmentManager {
         @Override
         public void writeToParcel(Parcel dest, int flags) {
             dest.writeParcelableArray(this.fragmentStates, flags);
-            dest.writeMap(extraStates);
+            dest.writeParcelable(backStackState, flags);
         }
 
         @SuppressWarnings("unchecked")
         private State(Parcel in) {
-            this.fragmentStates = in.readParcelableArray(State.class.getClassLoader());
-            this.extraStates = in.readHashMap(SimpleFragmentKey.class.getClassLoader());
+            this.fragmentStates = in.readParcelableArray(getClass().getClassLoader());
+            this.backStackState = in.readParcelable(getClass().getClassLoader());
         }
 
         public static final Parcelable.Creator<State> CREATOR = new Parcelable.Creator<State>() {
@@ -310,32 +267,5 @@ public class SimpleFragmentManager {
                 return new State[size];
             }
         };
-    }
-
-    public static final class ExtraKey<T extends ExtraValue> {
-        private String name;
-
-        public ExtraKey(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            ExtraKey<?> extraKey = (ExtraKey<?>) o;
-
-            return name.equals(extraKey.name);
-
-        }
-
-        @Override
-        public int hashCode() {
-            return name.hashCode();
-        }
-    }
-
-    public interface ExtraValue extends Parcelable {
     }
 }

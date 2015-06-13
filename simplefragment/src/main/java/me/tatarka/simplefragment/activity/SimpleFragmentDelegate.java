@@ -15,23 +15,21 @@ import android.view.LayoutInflater;
 import android.view.View;
 
 import me.tatarka.simplefragment.SimpleFragmentContainer;
-import me.tatarka.simplefragment.SimpleFragmentContainerManager;
-import me.tatarka.simplefragment.SimpleFragmentContainerManagerProvider;
+import me.tatarka.simplefragment.SimpleFragmentContainerProvider;
 import me.tatarka.simplefragment.SimpleFragmentManager;
 import me.tatarka.simplefragment.SimpleFragmentManagerProvider;
 import me.tatarka.simplefragment.SimpleFragmentViewInflater;
-import me.tatarka.simplefragment.backstack.SimpleFragmentBackStack;
 
 /**
  * Created by evan on 3/7/15.
  */
-public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, SimpleFragmentContainerManagerProvider, LayoutInflaterFactory {
+public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, SimpleFragmentContainerProvider, LayoutInflaterFactory {
     private static final String TAG = "SimpleFragmentDelegate";
     private static final String STATE = "me.tatarka.simplefragment.STATE";
 
     private Activity activity;
     private SimpleFragmentManager fm;
-    private SimpleFragmentContainerManager cm;
+    private SimpleFragmentContainer cm;
     private SimpleFragmentViewInflater viewInflater;
     private LayoutInflaterFactory delegateFactory;
     private boolean isRootViewSet = false;
@@ -49,7 +47,7 @@ public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, Si
 
         if (savedInstanceState == null) {
             fm = new SimpleFragmentManager(context);
-            cm = new SimpleFragmentContainerManager(fm, null);
+            cm = new SimpleFragmentContainer(fm, null);
         } else {
             Object lastNonConfigInstance;
             if (activity instanceof FragmentActivity) {
@@ -66,7 +64,7 @@ public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, Si
             } else {
                 State state = savedInstanceState.getParcelable(STATE);
                 fm = new SimpleFragmentManager(context);
-                cm = new SimpleFragmentContainerManager(fm, null);
+                cm = new SimpleFragmentContainer(fm, null);
                 fm.restoreState(state.fmState);
                 cm.restoreState(state.cmState);
             }
@@ -151,17 +149,17 @@ public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, Si
     }
 
     @Override
-    public SimpleFragmentContainerManager getSimpleFragmentContainerManager() {
+    public SimpleFragmentContainer getSimpleFragmentContainer() {
         return cm;
     }
 
     public boolean onBackPress() {
-        return SimpleFragmentBackStack.getInstance(fm).pop();
+        return fm.getBackStack().pop();
     }
 
     private static class NonConfigInstance {
         SimpleFragmentManager fm;
-        SimpleFragmentContainerManager cm;
+        SimpleFragmentContainer cm;
         Object clientState;
     }
 

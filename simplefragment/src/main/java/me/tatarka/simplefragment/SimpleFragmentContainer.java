@@ -2,6 +2,7 @@ package me.tatarka.simplefragment;
 
 import android.content.Context;
 import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
 import android.view.View;
@@ -22,9 +23,7 @@ import me.tatarka.simplefragment.key.SimpleFragmentKey;
  * A container where you can directly add and remove fragments to the view hierarchy. It also
  * supports back stack-like features.
  */
-public class SimpleFragmentContainer implements SimpleFragmentContainerManager.Value {
-    public static final SimpleFragmentContainerManager.Key<SimpleFragmentContainer> KEY = new SimpleFragmentContainerManager.Key<>("me.tatarka.simplefragment.SimpleFragmentContainer");
-
+public class SimpleFragmentContainer {
     private SimpleFragmentManager fm;
     private SimpleFragmentKey parentKey;
     private View rootView;
@@ -32,27 +31,10 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
     private final Map<SimpleFragmentContainerKey, SimpleFragment> fragmentsPendingAttach = new HashMap<>();
     private SimpleFragmentBackStack backStack;
 
-    public static SimpleFragmentContainer getInstance(SimpleFragmentContainerManagerProvider provider) {
-        return getInstance(provider.getSimpleFragmentContainerManager());
-    }
-
-    public static SimpleFragmentContainer getInstance(SimpleFragmentContainerManager cm) {
-        SimpleFragmentContainer container = cm.get(KEY);
-        if (container == null) {
-            container = new SimpleFragmentContainer();
-            cm.put(KEY, container);
-        }
-        container.setManager(cm);
-        return container;
-    }
-
-    private SimpleFragmentContainer() {
-    }
-
-    private void setManager(SimpleFragmentContainerManager cm) {
-        this.fm = cm.getSimpleFragmentManager();
-        this.parentKey = cm.getParentKey();
-        this.backStack = SimpleFragmentBackStack.getInstance(fm);
+    public SimpleFragmentContainer(SimpleFragmentManager fm, @Nullable SimpleFragmentKey parentKey) {
+        this.fm = fm;
+        this.parentKey = parentKey;
+        this.backStack = fm.getBackStack();
         this.backStack.addListener(parentKey, new BackStackListener());
     }
 
@@ -60,8 +42,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
         return fm;
     }
 
-    @Override
-    public void onAttachView(View rootView) {
+    public void setView(View rootView) {
         this.rootView = rootView;
 
         // Restore previously attached fragments.
@@ -78,8 +59,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
         fragmentsPendingAttach.clear();
     }
 
-    @Override
-    public void onClearView() {
+    public void clearView() {
         for (SimpleFragmentContainerKey key : attachedKeys) {
             SimpleFragment fragment = fm.find(key);
             key.detach(this, rootView, fragment);
@@ -87,31 +67,7 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
         }
         rootView = null;
     }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeList(attachedKeys);
-    }
-
-    private SimpleFragmentContainer(Parcel in) {
-        in.readList(this.attachedKeys, getClass().getClassLoader());
-    }
-
-    public static final Creator<SimpleFragmentContainer> CREATOR = new Creator<SimpleFragmentContainer>() {
-        public SimpleFragmentContainer createFromParcel(Parcel source) {
-            return new SimpleFragmentContainer(source);
-        }
-
-        public SimpleFragmentContainer[] newArray(int size) {
-            return new SimpleFragmentContainer[size];
-        }
-    };
-
+    
     /**
      * Creates a {@code SimpleFragment} and attaches it to the view with the given id.
      *
@@ -267,18 +223,6 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
         return backStack.pop(parentKey);
     }
 
-    /**
-     * Pops the last fragment globally added to to back stack for this {@code
-     * SimpleFragmentManager}. This is equivalent to what should happen when the user presses the
-     * back button. Warning! this may remove a fragment in a completely different container, if you
-     * just want to manage your own child fragments, use {@link #pop()} instead.
-     *
-     * @return True if there was a fragment on the back stack to pop, false otherwise.
-     */
-    public boolean popGlobal() {
-        return backStack.pop();
-    }
-
     @Nullable
     public SimpleFragmentKey getParentKey() {
         return parentKey;
@@ -333,5 +277,49 @@ public class SimpleFragmentContainer implements SimpleFragmentContainerManager.V
 
     private static boolean equals(Object a, Object b) {
         return (a == null) ? (b == null) : a.equals(b);
+    }
+
+    public Parcelable saveState() {
+        return new State(attachedKeys);
+    }
+
+    public void restoreState(Parcelable parcelable) {
+        State state = (State) parcelable;
+        attachedKeys.addAll(state.attachedKeys);
+    }
+
+    static class State implements Parcelable {
+        List<SimpleFragmentContainerKey> attachedKeys;
+
+        State(List<SimpleFragmentContainerKey> attachedKeys) {
+            this.attachedKeys = attachedKeys;
+        }
+
+        State(Parcel in) {
+            attachedKeys = new ArrayList<>();
+            in.readList(attachedKeys, getClass().getClassLoader());
+        }
+
+        public static final Creator<State> CREATOR = new Creator<State>() {
+            @Override
+            public State createFromParcel(Parcel in) {
+                return new State(in);
+            }
+
+            @Override
+            public State[] newArray(int size) {
+                return new State[size];
+            }
+        };
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeList(attachedKeys);
+        }
     }
 }

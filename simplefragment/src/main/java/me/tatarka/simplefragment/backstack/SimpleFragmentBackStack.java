@@ -4,7 +4,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
-import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,28 +23,12 @@ import me.tatarka.simplefragment.key.SimpleFragmentKey;
  * fragment of the back-stack. You should not use this directly, instead delegate through the {@link
  * me.tatarka.simplefragment.SimpleFragmentContainer}.
  */
-public class SimpleFragmentBackStack implements SimpleFragmentManager.ExtraValue {
-    public static final SimpleFragmentManager.ExtraKey<SimpleFragmentBackStack> KEY = new SimpleFragmentManager.ExtraKey<>(SimpleFragmentBackStack.class.getName());
-
-    /**
-     * Obtains an instance of {@code SimpleFragmentBackStack} for the given manager.
-     */
-    public static SimpleFragmentBackStack getInstance(SimpleFragmentManager fm) {
-        SimpleFragmentBackStack backStack = fm.getExtra(KEY);
-        if (backStack == null) {
-            backStack = new SimpleFragmentBackStack(fm);
-            fm.putExtra(KEY, backStack);
-        } else {
-            backStack.restoreFm(fm);
-        }
-        return backStack;
-    }
-
+public class SimpleFragmentBackStack {
     private SimpleFragmentManager fm;
     private List<LayoutKey> backStack;
     private Map<SimpleFragmentKey, BackStackListener> listeners = new HashMap<>();
 
-    private SimpleFragmentBackStack(SimpleFragmentManager fm) {
+    public SimpleFragmentBackStack(SimpleFragmentManager fm) {
         this.fm = fm;
         this.backStack = new ArrayList<>();
     }
@@ -167,14 +150,48 @@ public class SimpleFragmentBackStack implements SimpleFragmentManager.ExtraValue
         return (a == null) ? (b == null) : a.equals(b);
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
+
+    public Parcelable saveState() {
+        return new State(backStack);
+    }
+    
+    public void restoreState(Parcelable parcelable) {
+        State state = (State) parcelable;
+        this.backStack = state.backStack;
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeTypedList(this.backStack);
+    static class State implements Parcelable {
+        List<LayoutKey> backStack;
+
+        State(List<LayoutKey> backStack) {
+            this.backStack = backStack;
+        }
+
+        protected State(Parcel in) {
+            backStack = in.createTypedArrayList(LayoutKey.CREATOR);
+        }
+
+        public static final Creator<State> CREATOR = new Creator<State>() {
+            @Override
+            public State createFromParcel(Parcel in) {
+                return new State(in);
+            }
+
+            @Override
+            public State[] newArray(int size) {
+                return new State[size];
+            }
+        };
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeTypedList(backStack);
+        }
     }
 
     private SimpleFragmentBackStack(Parcel in) {

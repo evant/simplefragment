@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import me.tatarka.simplefragment.SimpleFragment;
-import me.tatarka.simplefragment.SimpleFragmentContainerManagerProvider;
 import me.tatarka.simplefragment.SimpleFragmentIntent;
 import me.tatarka.simplefragment.SimpleFragmentManager;
 import me.tatarka.simplefragment.SimpleFragmentManagerProvider;

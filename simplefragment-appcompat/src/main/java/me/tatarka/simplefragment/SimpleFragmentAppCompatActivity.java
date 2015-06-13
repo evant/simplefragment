@@ -27,7 +27,7 @@ import me.tatarka.simplefragment.activity.SimpleFragmentDelegate;
 /**
  * Created by evan on 2/2/15.
  */
-public class SimpleFragmentAppCompatActivity extends Activity implements SimpleFragmentManagerProvider, SimpleFragmentContainerManagerProvider, AppCompatCallback {
+public class SimpleFragmentAppCompatActivity extends Activity implements SimpleFragmentManagerProvider, SimpleFragmentContainerProvider, AppCompatCallback {
     private AppCompatDelegate appCompatDelegate;
     private SimpleFragmentDelegate simpleFragmentDelegate;
 
@@ -395,8 +395,8 @@ public class SimpleFragmentAppCompatActivity extends Activity implements SimpleF
     }
 
     @Override
-    public SimpleFragmentContainerManager getSimpleFragmentContainerManager() {
-        return getSimpleFragmentDelegate().getSimpleFragmentContainerManager();
+    public SimpleFragmentContainer getSimpleFragmentContainer() {
+        return getSimpleFragmentDelegate().getSimpleFragmentContainer();
     }
 
     /**

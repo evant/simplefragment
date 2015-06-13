@@ -20,8 +20,8 @@ public class SimpleFragmentViewInflater implements LayoutInflaterFactory {
 
     private SimpleFragmentContainer container;
 
-    public SimpleFragmentViewInflater(SimpleFragmentContainerManagerProvider provider) {
-        this(SimpleFragmentContainer.getInstance(provider));
+    public SimpleFragmentViewInflater(SimpleFragmentContainerProvider provider) {
+        this(provider.getSimpleFragmentContainer());
     }
 
     public SimpleFragmentViewInflater(SimpleFragmentContainer container) {
