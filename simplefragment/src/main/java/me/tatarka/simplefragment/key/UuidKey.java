@@ -9,8 +9,12 @@ import java.util.UUID;
  */
 public class UuidKey implements SimpleFragmentKey {
     private String uuid;
+    
+    public static UuidKey create() {
+        return new UuidKey();
+    }
 
-    public UuidKey() {
+    private UuidKey() {
         uuid = UUID.randomUUID().toString();
     }
 

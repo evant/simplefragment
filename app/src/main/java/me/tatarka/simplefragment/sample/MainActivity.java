@@ -5,11 +5,21 @@ import android.support.v4.view.ViewPager;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.util.Arrays;
+import java.util.List;
+
+import me.tatarka.simplefragment.SimpleFragment;
 import me.tatarka.simplefragment.SimpleFragmentAppCompatActivity;
 import me.tatarka.simplefragment.SimpleFragmentIntent;
 import me.tatarka.simplefragment.widget.SimpleFragmentPagerAdapter;
 
 public class MainActivity extends SimpleFragmentAppCompatActivity {
+    private static final List<Class<? extends SimpleFragment>> FRAGMENTS = Arrays.asList(
+            SimpleFragmentFromLayout.class,
+            SimpleFragmentWithBackStack.class,
+            SimpleFragmentDialogs.class
+    );
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +51,7 @@ public class MainActivity extends SimpleFragmentAppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+
     private class Adapter extends SimpleFragmentPagerAdapter {
         public Adapter() {
             super(MainActivity.this, getLayoutInflater());
@@ -48,20 +59,12 @@ public class MainActivity extends SimpleFragmentAppCompatActivity {
 
         @Override
         public SimpleFragmentIntent getItem(int position) {
-            switch (position) {
-                case 0:
-                    return new SimpleFragmentIntent<>(SimpleFragmentFromLayout.class);
-                case 1:
-                    return new SimpleFragmentIntent<>(SimpleFragmentWithBackStack.class);
-                case 2:
-                    return new SimpleFragmentIntent<>(SimpleFragmentDialogs.class);
-            }
-            return null;
+            return SimpleFragmentIntent.of(FRAGMENTS.get(position));
         }
 
         @Override
         public int getCount() {
-            return 3;
+            return FRAGMENTS.size();
         }
     }
 }

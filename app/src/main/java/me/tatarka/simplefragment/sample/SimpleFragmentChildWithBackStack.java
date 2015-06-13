@@ -31,8 +31,8 @@ public class SimpleFragmentChildWithBackStack extends SimpleFragment {
 
     @Override
     public void onCreate(Context context, @Nullable Bundle state) {
-        stackCount = getIntent().getIntArg(ARG_STACK_COUNT, 0);
-        viewId = getIntent().getIntArg(ARG_VIEW_ID);
+        stackCount = getIntent().getIntExtra(ARG_STACK_COUNT, 0);
+        viewId = getIntent().getIntExtra(ARG_VIEW_ID, 0);
     }
 
     @Override

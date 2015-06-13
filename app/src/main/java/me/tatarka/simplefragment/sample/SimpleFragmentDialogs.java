@@ -11,15 +11,17 @@ import android.widget.Toast;
 
 import me.tatarka.simplefragment.SimpleFragment;
 import me.tatarka.simplefragment.SimpleFragmentIntent;
+import me.tatarka.simplefragment.key.DialogKey;
 
 /**
  * Created by evan on 3/21/15.
  */
 public class SimpleFragmentDialogs extends SimpleFragment {
+    private static final DialogKey DIALOG_KEY = DialogKey.of("dialog");
 
     @Override
     public void onCreate(final Context context, @Nullable Bundle state) {
-        SimpleFragmentDialog dialogFragment = (SimpleFragmentDialog) getSimpleFragmentContainer().findDialog("dialog");
+        SimpleFragmentDialog dialogFragment = (SimpleFragmentDialog) getSimpleFragmentContainer().find(DIALOG_KEY);
         if (dialogFragment != null) {
             setDialogListener(dialogFragment);
         }
@@ -35,7 +37,7 @@ public class SimpleFragmentDialogs extends SimpleFragment {
         view.findViewById(R.id.show_dialog).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final SimpleFragmentDialog dialogFragment = getSimpleFragmentContainer().addDialog(new SimpleFragmentIntent<>(SimpleFragmentDialog.class), "dialog");
+                final SimpleFragmentDialog dialogFragment = getSimpleFragmentContainer().add(SimpleFragmentIntent.of(SimpleFragmentDialog.class), DIALOG_KEY);
                 setDialogListener(dialogFragment);
                 dialogFragment.show();
             }

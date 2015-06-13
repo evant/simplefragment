@@ -13,6 +13,7 @@ import org.mockito.MockitoAnnotations;
 import me.tatarka.simplefragment.SimpleFragmentContainer;
 import me.tatarka.simplefragment.SimpleFragmentIntent;
 import me.tatarka.simplefragment.SimpleFragmentManager;
+import me.tatarka.simplefragment.key.LayoutKey;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyInt;
@@ -23,6 +24,8 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(CustomRobolectricRunner.class) // Robolectric needed to not crash on Bundle usage.
 public class SimpleFragmentContainerTest {
+    private static final LayoutKey KEY = LayoutKey.of(0);
+    
     @Mock
     Context context;
     @Mock
@@ -39,7 +42,7 @@ public class SimpleFragmentContainerTest {
         SimpleFragmentManager fm = new SimpleFragmentManager(context);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
-        TestSimpleFragment fragment = cm.add(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        TestSimpleFragment fragment = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
 
         assertThat(fragment.wasOnCreateViewCalled).isTrue();
     }
@@ -48,7 +51,7 @@ public class SimpleFragmentContainerTest {
     public void testAddBeforeSetRootView() {
         SimpleFragmentManager fm = new SimpleFragmentManager(context);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
-        TestSimpleFragment fragment = cm.add(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        TestSimpleFragment fragment = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         cm.setView(rootView);
 
         assertThat(fragment.wasOnCreateViewCalled).isTrue();
@@ -59,7 +62,7 @@ public class SimpleFragmentContainerTest {
         SimpleFragmentManager fm = new SimpleFragmentManager(context);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
-        TestSimpleFragment fragment = cm.add(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        TestSimpleFragment fragment = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         cm.clearView();
         fm.clearConfigurationState();
         fragment.wasOnCreateViewCalled = false;
@@ -74,7 +77,7 @@ public class SimpleFragmentContainerTest {
         SimpleFragmentManager fm = new SimpleFragmentManager(context);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
-        TestSimpleFragment fragment = cm.add(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        TestSimpleFragment fragment = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         Parcelable fmState = fm.saveState();
         Parcelable cmState = cm.saveState();
         fm = new SimpleFragmentManager(context);
@@ -82,7 +85,7 @@ public class SimpleFragmentContainerTest {
         fm.restoreState(fmState);
         cm.restoreState(cmState);
 
-        assertThat(cm.find(0)).isEqualTo(fragment);
+        assertThat(cm.find(KEY)).isEqualTo(fragment);
     }
 
     @Test
@@ -90,7 +93,7 @@ public class SimpleFragmentContainerTest {
         SimpleFragmentManager fm = new SimpleFragmentManager(context);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
-        TestSimpleFragment fragment = cm.add(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        TestSimpleFragment fragment = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         cm.remove(fragment);
 
         assertThat(fm.getFragments()).isEmpty();
@@ -101,10 +104,10 @@ public class SimpleFragmentContainerTest {
         SimpleFragmentManager fm = new SimpleFragmentManager(context);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
-        TestSimpleFragment fragment1 = cm.add(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
-        TestSimpleFragment fragment2 = cm.push(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        TestSimpleFragment fragment1 = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
+        TestSimpleFragment fragment2 = cm.push(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
 
-        assertThat(cm.find(0)).isSameAs(fragment2);
+        assertThat(cm.find(KEY)).isSameAs(fragment2);
     }
 
     @Test
@@ -112,14 +115,14 @@ public class SimpleFragmentContainerTest {
         SimpleFragmentManager fm = new SimpleFragmentManager(context);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
-        TestSimpleFragment fragment1 = cm.add(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
-        TestSimpleFragment fragment2 = cm.push(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        TestSimpleFragment fragment1 = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
+        TestSimpleFragment fragment2 = cm.push(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         cm.clearView();
         fm.clearConfigurationState();
         fm.restoreConfigurationState(context);
         cm.setView(rootView);
 
-        assertThat(cm.find(0)).isSameAs(fragment2);
+        assertThat(cm.find(KEY)).isSameAs(fragment2);
     }
 
     @Test
@@ -127,19 +130,19 @@ public class SimpleFragmentContainerTest {
         SimpleFragmentManager fm = new SimpleFragmentManager(context);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
-        TestSimpleFragment fragment1 = cm.add(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        TestSimpleFragment fragment1 = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         cm.clearView();
         ;
         fm.clearConfigurationState();
         fm.restoreConfigurationState(context);
         cm.setView(rootView);
-        TestSimpleFragment fragment2 = cm.push(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        TestSimpleFragment fragment2 = cm.push(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         cm.clearView();
         fm.clearConfigurationState();
         fm.restoreConfigurationState(context);
         cm.setView(rootView);
 
-        assertThat(cm.find(0)).isSameAs(fragment2);
+        assertThat(cm.find(KEY)).isSameAs(fragment2);
     }
 
     @Test
@@ -147,8 +150,8 @@ public class SimpleFragmentContainerTest {
         SimpleFragmentManager fm = new SimpleFragmentManager(context);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
-        TestSimpleFragment fragment1 = cm.add(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
-        TestSimpleFragment fragment2 = cm.push(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        TestSimpleFragment fragment1 = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
+        TestSimpleFragment fragment2 = cm.push(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         Parcelable fmState = fm.saveState();
         Parcelable cmState = cm.saveState();
         fm.clearConfigurationState();
@@ -159,7 +162,7 @@ public class SimpleFragmentContainerTest {
         cm.restoreState(cmState);
         cm.setView(rootView);
 
-        assertThat(cm.find(0)).isEqualTo(fragment2);
+        assertThat(cm.find(KEY)).isEqualTo(fragment2);
     }
 
     @Test
@@ -167,11 +170,11 @@ public class SimpleFragmentContainerTest {
         SimpleFragmentManager fm = new SimpleFragmentManager(context);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
-        TestSimpleFragment fragment1 = cm.add(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
-        TestSimpleFragment fragment2 = cm.push(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        TestSimpleFragment fragment1 = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
+        TestSimpleFragment fragment2 = cm.push(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         cm.pop();
 
-        assertThat(cm.find(0)).isSameAs(fragment1);
+        assertThat(cm.find(KEY)).isSameAs(fragment1);
     }
 
     @Test
@@ -179,15 +182,15 @@ public class SimpleFragmentContainerTest {
         SimpleFragmentManager fm = new SimpleFragmentManager(context);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
-        TestSimpleFragment fragment1 = cm.add(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
-        TestSimpleFragment fragment2 = cm.push(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        TestSimpleFragment fragment1 = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
+        TestSimpleFragment fragment2 = cm.push(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         cm.clearView();
         fm.clearConfigurationState();
         fm.restoreConfigurationState(context);
         cm.setView(rootView);
         cm.pop();
 
-        assertThat(cm.find(0)).isSameAs(fragment1);
+        assertThat(cm.find(KEY)).isSameAs(fragment1);
     }
 
     @Test
@@ -195,8 +198,8 @@ public class SimpleFragmentContainerTest {
         SimpleFragmentManager fm = new SimpleFragmentManager(context);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
-        TestSimpleFragment fragment1 = cm.add(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
-        TestSimpleFragment fragment2 = cm.push(new SimpleFragmentIntent<>(TestSimpleFragment.class), 0);
+        TestSimpleFragment fragment1 = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
+        TestSimpleFragment fragment2 = cm.push(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         Parcelable fmState = fm.saveState();
         Parcelable cmState = cm.saveState();
         fm.clearConfigurationState();
@@ -208,6 +211,6 @@ public class SimpleFragmentContainerTest {
         cm.setView(rootView);
         cm.pop();
 
-        assertThat(cm.find(0)).isEqualTo(fragment1);
+        assertThat(cm.find(KEY)).isEqualTo(fragment1);
     }
 }

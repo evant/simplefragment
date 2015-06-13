@@ -49,7 +49,7 @@ public class SimpleFragmentPagerAdapterTest {
         SimpleFragmentPagerAdapter adapter = new SimpleFragmentPagerAdapter(manager, layoutInflater) {
             @Override
             public SimpleFragmentIntent<?> getItem(int position) {
-                return new SimpleFragmentIntent<>(TestSimpleFragment.class).putArg("test", 0);
+                return SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 1);
             }
 
             @Override
@@ -60,7 +60,7 @@ public class SimpleFragmentPagerAdapterTest {
         ViewGroup parent = mock(ViewGroup.class);
         adapter.instantiateItem(parent, 0);
 
-        assertThat(adapter.getFragmentForPosition(0).getIntent().getIntArg("test")).isEqualTo(0);
+        assertThat(adapter.getFragmentForPosition(0).getIntent().getIntExtra("test", 0)).isEqualTo(1);
     }
 
     @Test
@@ -69,7 +69,7 @@ public class SimpleFragmentPagerAdapterTest {
         PagerAdapter adapter = new SimpleFragmentPagerAdapter(manager, layoutInflater) {
             @Override
             public SimpleFragmentIntent<?> getItem(int position) {
-                return new SimpleFragmentIntent<>(TestSimpleFragment.class);
+                return SimpleFragmentIntent.of(TestSimpleFragment.class);
             }
 
             @Override
@@ -85,7 +85,7 @@ public class SimpleFragmentPagerAdapterTest {
         PagerAdapter newAdapter = new SimpleFragmentPagerAdapter(manager, layoutInflater) {
             @Override
             public SimpleFragmentIntent<?> getItem(int position) {
-                return new SimpleFragmentIntent<>(TestSimpleFragment.class);
+                return SimpleFragmentIntent.of(TestSimpleFragment.class);
             }
 
             @Override
@@ -104,7 +104,7 @@ public class SimpleFragmentPagerAdapterTest {
     public void destroyFragmentWhenNotifyRemoved() {
         final SimpleFragmentManager manager = new SimpleFragmentManager(context);
         final List<SimpleFragmentIntent> fragments = new ArrayList<>();
-        fragments.add(new SimpleFragmentIntent<>(TestSimpleFragment.class));
+        fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class));
         PagerAdapter adapter = new SimpleFragmentPagerAdapter(manager, layoutInflater) {
             @Override
             public SimpleFragmentIntent<?> getItem(int position) {
@@ -128,7 +128,7 @@ public class SimpleFragmentPagerAdapterTest {
     public void addNewFragmentOnNotifyAdd() {
         final SimpleFragmentManager manager = new SimpleFragmentManager(context);
         final List<SimpleFragmentIntent> fragments = new ArrayList<>();
-        fragments.add(new SimpleFragmentIntent<>(TestSimpleFragment.class).putArg("test", 0));
+        fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 1));
         SimpleFragmentPagerAdapter adapter = new SimpleFragmentPagerAdapter(manager, layoutInflater) {
             @Override
             public SimpleFragmentIntent<?> getItem(int position) {
@@ -142,20 +142,20 @@ public class SimpleFragmentPagerAdapterTest {
         };
         ViewGroup parent = mock(ViewGroup.class);
         adapter.instantiateItem(parent, 0);
-        fragments.add(new SimpleFragmentIntent<>(TestSimpleFragment.class).putArg("test", 1));
+        fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 2));
         adapter.notifyDataSetChanged();
         adapter.instantiateItem(parent, 1);
 
-        assertThat(adapter.getFragmentForPosition(0).getIntent().getIntArg("test")).isEqualTo(0);
-        assertThat(adapter.getFragmentForPosition(1).getIntent().getIntArg("test")).isEqualTo(1);
+        assertThat(adapter.getFragmentForPosition(0).getIntent().getIntExtra("test", 0)).isEqualTo(1);
+        assertThat(adapter.getFragmentForPosition(1).getIntent().getIntExtra("test", 0)).isEqualTo(2);
     }
 
     @Test
     public void tracksChangingPositionsOfFragmentIntents() {
         final SimpleFragmentManager manager = new SimpleFragmentManager(context);
         final List<SimpleFragmentIntent> fragments = new ArrayList<>();
-        fragments.add(new SimpleFragmentIntent<>(TestSimpleFragment.class).putArg("test", 0));
-        fragments.add(new SimpleFragmentIntent<>(TestSimpleFragment.class).putArg("test", 1));
+        fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 1));
+        fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 2));
         SimpleFragmentPagerAdapter adapter = new SimpleFragmentPagerAdapter(manager, layoutInflater) {
             @Override
             public SimpleFragmentIntent<?> getItem(int position) {
@@ -173,16 +173,16 @@ public class SimpleFragmentPagerAdapterTest {
         fragments.add(fragments.remove(0)); // Swap fragment intents
         adapter.notifyDataSetChanged();
 
-        assertThat(adapter.getFragmentForPosition(0).getIntent().getIntArg("test")).isEqualTo(1);
-        assertThat(adapter.getFragmentForPosition(1).getIntent().getIntArg("test")).isEqualTo(0);
+        assertThat(adapter.getFragmentForPosition(0).getIntent().getIntExtra("test", 0)).isEqualTo(2);
+        assertThat(adapter.getFragmentForPosition(1).getIntent().getIntExtra("test", 0)).isEqualTo(1);
     }
 
     @Test
     public void moveAndReplaceFragmentAtPosition() {
         final SimpleFragmentManager manager = new SimpleFragmentManager(context);
         final List<SimpleFragmentIntent> fragments = new ArrayList<>();
-        fragments.add(new SimpleFragmentIntent<>(TestSimpleFragment.class).putArg("test", 0));
-        fragments.add(new SimpleFragmentIntent<>(TestSimpleFragment.class).putArg("test", 1));
+        fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 1));
+        fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 2));
         SimpleFragmentPagerAdapter adapter = new SimpleFragmentPagerAdapter(manager, layoutInflater) {
             @Override
             public SimpleFragmentIntent<?> getItem(int position) {
@@ -198,11 +198,11 @@ public class SimpleFragmentPagerAdapterTest {
         adapter.instantiateItem(parent, 0);
         adapter.instantiateItem(parent, 1);
         fragments.remove(0);
-        fragments.add(new SimpleFragmentIntent<>(TestSimpleFragment.class).putArg("test", 2));
+        fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 3));
         adapter.notifyDataSetChanged();
         adapter.instantiateItem(parent, 1);
 
-        assertThat(adapter.getFragmentForPosition(0).getIntent().getIntArg("test")).isEqualTo(1);
-        assertThat(adapter.getFragmentForPosition(1).getIntent().getIntArg("test")).isEqualTo(2);
+        assertThat(adapter.getFragmentForPosition(0).getIntent().getIntExtra("test", 0)).isEqualTo(2);
+        assertThat(adapter.getFragmentForPosition(1).getIntent().getIntExtra("test", 0)).isEqualTo(3);
     }
 }

@@ -55,7 +55,7 @@ public abstract class SimpleFragmentPagerAdapter extends PagerAdapter {
             if (intent == null) {
                 throw new NullPointerException("getItem() returned null.");
             }
-            SimpleFragmentKey key = new UuidKey();
+            SimpleFragmentKey key = UuidKey.create();
             fragment = fm.create(intent, key);
         }
         View view = fm.createView(fragment, layoutInflater, container);

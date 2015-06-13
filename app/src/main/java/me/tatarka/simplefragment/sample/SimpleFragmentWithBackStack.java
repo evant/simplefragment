@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import me.tatarka.simplefragment.SimpleFragment;
 import me.tatarka.simplefragment.SimpleFragmentContainer;
 import me.tatarka.simplefragment.SimpleFragmentIntent;
+import me.tatarka.simplefragment.key.LayoutKey;
 
 import static me.tatarka.simplefragment.sample.SimpleFragmentChildWithBackStack.ARG_STACK_COUNT;
 import static me.tatarka.simplefragment.sample.SimpleFragmentChildWithBackStack.ARG_VIEW_ID;
@@ -24,11 +25,11 @@ public class SimpleFragmentWithBackStack extends SimpleFragment {
         final SimpleFragmentContainer container = getSimpleFragmentContainer();
 
         container.findOrAdd(
-                new SimpleFragmentIntent<>(SimpleFragmentChildWithBackStack.class)
-                        .putArg(ARG_VIEW_ID, R.id.child_fragment1), R.id.child_fragment1);
+                SimpleFragmentIntent.of(SimpleFragmentChildWithBackStack.class)
+                        .putExtra(ARG_VIEW_ID, R.id.child_fragment1), LayoutKey.of(R.id.child_fragment1));
         container.findOrAdd(
-                new SimpleFragmentIntent<>(SimpleFragmentChildWithBackStack.class)
-                        .putArg(ARG_VIEW_ID, R.id.child_fragment2), R.id.child_fragment2);
+                SimpleFragmentIntent.of(SimpleFragmentChildWithBackStack.class)
+                        .putExtra(ARG_VIEW_ID, R.id.child_fragment2), LayoutKey.of(R.id.child_fragment2));
 
         final SimpleFragmentChildWithBackStack.OnRemoveListener removeListener = new SimpleFragmentChildWithBackStack.OnRemoveListener() {
             @Override
@@ -41,9 +42,9 @@ public class SimpleFragmentWithBackStack extends SimpleFragment {
             @Override
             public void onAdd(int viewId, int stackCount) {
                 SimpleFragmentChildWithBackStack newFragment = container.push(
-                        new SimpleFragmentIntent<>(SimpleFragmentChildWithBackStack.class)
-                                .putArg(ARG_STACK_COUNT, stackCount + 1)
-                                .putArg(ARG_VIEW_ID, viewId), viewId);
+                        SimpleFragmentIntent.of(SimpleFragmentChildWithBackStack.class)
+                                .putExtra(ARG_STACK_COUNT, stackCount + 1)
+                                .putExtra(ARG_VIEW_ID, viewId), LayoutKey.of(viewId));
                 newFragment.setListeners(this, removeListener);
             }
         };

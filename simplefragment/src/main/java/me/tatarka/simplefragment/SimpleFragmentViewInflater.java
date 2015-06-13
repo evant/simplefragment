@@ -8,6 +8,8 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import me.tatarka.simplefragment.key.LayoutKey;
+
 /**
  * A custom {@code LayoutInflater.Factory} that instantiates fragment tags as SimpleFragments instead of
  * Android fragments.
@@ -44,7 +46,7 @@ public class SimpleFragmentViewInflater implements LayoutInflaterFactory {
         try {
             Class<? extends SimpleFragment> fragmentClass = (Class<? extends SimpleFragment>) Class.forName(fragmentName);
             FrameLayout view = new FrameLayout(context, attrs);
-            container.findOrAdd(new SimpleFragmentIntent<>(fragmentClass), view.getId());
+            container.findOrAdd(SimpleFragmentIntent.of(fragmentClass), LayoutKey.of(view.getId()));
             return view;
         } catch (ClassNotFoundException e) {
             throw new IllegalArgumentException(e);

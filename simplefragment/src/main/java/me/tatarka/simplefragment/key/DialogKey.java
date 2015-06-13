@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Parcel;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 
@@ -15,15 +16,15 @@ import me.tatarka.simplefragment.SimpleFragmentManager;
 /**
  * An implementation of {@code SimpleFragmentKey} used to show dialogs, it requires a unique tag.
  */
-public class DialogKey extends SimpleFragmentContainerKey {
+public class DialogKey implements SimpleFragmentContainerKey {
     private SimpleFragmentKey parent;
     private String tag;
 
-    public DialogKey(@NonNull String tag) {
-        this(null, tag);
+    public static DialogKey of(@NonNull String tag) {
+        return new DialogKey(null, tag);
     }
 
-    public DialogKey(SimpleFragmentKey parent, @NonNull String tag) {
+    private DialogKey(SimpleFragmentKey parent, @NonNull String tag) {
         this.parent = parent;
         this.tag = tag;
     }
@@ -33,30 +34,47 @@ public class DialogKey extends SimpleFragmentContainerKey {
     }
 
     @Override
-    public int describeContents() {
-        return 0;
+    public void attach(final SimpleFragmentContainer container, View rootView, final SimpleFragment fragment) {
+        if (!(fragment instanceof SimpleDialogFragment)) {
+            throw new IllegalStateException(fragment + " is not a SimpleDialogFragment");
+        }
+        SimpleFragmentManager fm = container.getFragmentManager();
+        fm.createView(fragment, LayoutInflater.from(rootView.getContext()), null);
+        Dialog dialog = ((SimpleDialogFragment) fragment).getDialog();
+        if (dialog != null) {
+            dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    container.remove(fragment);
+                }
+            });
+        }
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeParcelable(this.parent, 0);
-        dest.writeString(this.tag);
+    public void detach(SimpleFragmentContainer container, View rootView, SimpleFragment fragment) {
+        SimpleFragmentManager fm = container.getFragmentManager();
+        fm.destroyView(fragment);
     }
 
-    private DialogKey(Parcel in) {
-        this.parent = in.readParcelable(SimpleFragmentKey.class.getClassLoader());
-        this.tag = in.readString();
+    @Override
+    public SimpleFragmentKey getParent() {
+        return parent;
     }
 
-    public static final Creator<DialogKey> CREATOR = new Creator<DialogKey>() {
-        public DialogKey createFromParcel(Parcel source) {
-            return new DialogKey(source);
+    @Override
+    public DialogKey withParent(SimpleFragmentKey parent) {
+        if (this.parent == parent) {
+            return this;
+        } else {
+            return new DialogKey(parent, tag);
         }
+    }
 
-        public DialogKey[] newArray(int size) {
-            return new DialogKey[size];
-        }
-    };
+    @Override
+    public boolean matches(@Nullable SimpleFragmentContainerKey other) {
+        return other instanceof DialogKey && ((DialogKey) other).tag.equals(tag);
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -89,28 +107,28 @@ public class DialogKey extends SimpleFragmentContainerKey {
     }
 
     @Override
-    public void attach(final SimpleFragmentContainer container, View rootView, final SimpleFragment fragment) {
-        SimpleFragmentManager fm = container.getFragmentManager();
-        fm.createView(fragment, LayoutInflater.from(rootView.getContext()), null);
-        Dialog dialog = ((SimpleDialogFragment) fragment).getDialog();
-        if (dialog != null) {
-            dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-                    container.remove(fragment);
-                }
-            });
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeParcelable(this.parent, 0);
+        dest.writeString(this.tag);
+    }
+
+    private DialogKey(Parcel in) {
+        this.parent = in.readParcelable(SimpleFragmentKey.class.getClassLoader());
+        this.tag = in.readString();
+    }
+
+    public static final Creator<DialogKey> CREATOR = new Creator<DialogKey>() {
+        public DialogKey createFromParcel(Parcel source) {
+            return new DialogKey(source);
         }
-    }
 
-    @Override
-    public void detach(SimpleFragmentContainer container, View rootView, SimpleFragment fragment) {
-        SimpleFragmentManager fm = container.getFragmentManager();
-        fm.destroyView(fragment);
-    }
-
-    @Override
-    public SimpleFragmentKey getParent() {
-        return parent;
-    }
+        public DialogKey[] newArray(int size) {
+            return new DialogKey[size];
+        }
+    };
 }

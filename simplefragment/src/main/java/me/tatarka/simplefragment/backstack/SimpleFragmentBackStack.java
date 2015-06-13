@@ -2,7 +2,6 @@ package me.tatarka.simplefragment.backstack;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
@@ -49,20 +48,20 @@ public class SimpleFragmentBackStack {
         listeners.put(parentKey, listener);
     }
 
-    public <T extends SimpleFragment> T push(SimpleFragmentIntent<T> intent, @Nullable SimpleFragmentKey parentKey, @IdRes int viewId) {
-        SimpleFragment previousFragment = findPreviousFragment(parentKey, viewId);
+    public <T extends SimpleFragment> T push(SimpleFragmentIntent<T> intent, LayoutKey key) {
+        SimpleFragment previousFragment = findPreviousFragmentUnknownIndex(key);
         int index;
         if (previousFragment != null) {
             index = ((LayoutKey) previousFragment.getKey()).getIndex() + 1;
         } else {
             index = 0;
         }
-        LayoutKey key = new LayoutKey(parentKey, viewId, index);
-        backStack.add(key);
-        T fragment = fm.create(intent, key);
-        BackStackListener listener = listeners.get(key.getParent());
+        LayoutKey newKey = key.withIndex(index);
+        backStack.add(newKey);
+        T fragment = fm.create(intent, newKey);
+        BackStackListener listener = listeners.get(newKey.getParent());
         if (listener == null) {
-            throw new IllegalArgumentException("No listener found for the given key's parent: " + key.getParent());
+            throw new IllegalArgumentException("No listener found for the given key's parent: " + newKey.getParent());
         }
         listener.onReplace(previousFragment, fragment);
         return fragment;
@@ -99,7 +98,7 @@ public class SimpleFragmentBackStack {
     public boolean remove(LayoutKey key) {
         if (backStack.remove(key)) {
             SimpleFragment fragment = fm.find(key);
-            SimpleFragment previousFragment = findPreviousFragment(key);
+            SimpleFragment previousFragment = findPreviousFragmentKnownIndex(key);
             if (previousFragment != null) {
                 LayoutKey previousFragmentKey = (LayoutKey) previousFragment.getKey();
                 BackStackListener listener = listeners.get(previousFragmentKey.getParent());
@@ -115,16 +114,16 @@ public class SimpleFragmentBackStack {
         }
     }
 
-    private SimpleFragment findPreviousFragment(SimpleFragmentKey parentKey, int viewId) {
+    private SimpleFragment findPreviousFragmentUnknownIndex(LayoutKey key) {
         SimpleFragment previousFragment = null;
         int previousIndex = -1;
         for (SimpleFragment fragment : fm.getFragments()) {
             if (fragment.getKey() instanceof LayoutKey) {
-                LayoutKey key = (LayoutKey) fragment.getKey();
-                if (equals(key.getParent(), parentKey) && key.getViewId() == viewId) {
-                    if (previousIndex < key.getIndex()) {
-                        previousIndex = key.getIndex();
-                        previousFragment = fm.find(key);
+                LayoutKey testKey = (LayoutKey) fragment.getKey();
+                if (equals(testKey.getParent(), key.getParent()) && testKey.getViewId() == key.getViewId()) {
+                    if (previousIndex < testKey.getIndex()) {
+                        previousIndex = testKey.getIndex();
+                        previousFragment = fm.find(testKey);
                     }
                 }
             }
@@ -132,11 +131,11 @@ public class SimpleFragmentBackStack {
         return previousFragment;
     }
 
-    private SimpleFragment findPreviousFragment(LayoutKey key) {
+    private SimpleFragment findPreviousFragmentKnownIndex(LayoutKey key) {
         SimpleFragment previousFragment = null;
         int index = key.getIndex() - 1;
         while (index >= 0) {
-            LayoutKey previousKey = new LayoutKey(key.getParent(), key.getViewId(), index);
+            LayoutKey previousKey = key.withIndex(index);
             previousFragment = fm.find(previousKey);
             if (previousFragment != null) {
                 break;
@@ -154,7 +153,7 @@ public class SimpleFragmentBackStack {
     public Parcelable saveState() {
         return new State(backStack);
     }
-    
+
     public void restoreState(Parcelable parcelable) {
         State state = (State) parcelable;
         this.backStack = state.backStack;

@@ -3,18 +3,16 @@ package me.tatarka.simplefragment;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
+import android.support.v4.util.ArrayMap;
 import android.view.View;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import me.tatarka.simplefragment.backstack.SimpleFragmentBackStack;
-import me.tatarka.simplefragment.key.DialogKey;
 import me.tatarka.simplefragment.key.LayoutKey;
 import me.tatarka.simplefragment.key.SimpleFragmentContainerKey;
 import me.tatarka.simplefragment.key.SimpleFragmentKey;
@@ -28,7 +26,7 @@ public class SimpleFragmentContainer {
     private SimpleFragmentKey parentKey;
     private View rootView;
     private final List<SimpleFragmentContainerKey> attachedKeys = new ArrayList<>();
-    private final Map<SimpleFragmentContainerKey, SimpleFragment> fragmentsPendingAttach = new HashMap<>();
+    private final Map<SimpleFragmentContainerKey, SimpleFragment> fragmentsPendingAttach = new ArrayMap<>();
     private SimpleFragmentBackStack backStack;
 
     public SimpleFragmentContainer(SimpleFragmentManager fm, @Nullable SimpleFragmentKey parentKey) {
@@ -67,7 +65,7 @@ public class SimpleFragmentContainer {
         }
         rootView = null;
     }
-    
+
     /**
      * Creates a {@code SimpleFragment} and attaches it to the view with the given id.
      *
@@ -76,16 +74,8 @@ public class SimpleFragmentContainer {
      * @param <T>    The fragment class.
      * @return The created fragment.
      */
-    public <T extends SimpleFragment> T add(SimpleFragmentIntent<T> intent, @IdRes int viewId) {
-        return add(intent, new LayoutKey(parentKey, viewId));
-    }
-
-    public <T extends SimpleFragment> T addDialog(SimpleFragmentIntent<T> intent, String tag) {
-        return add(intent, new DialogKey(parentKey, tag));
-    }
-
     public <T extends SimpleFragment> T add(SimpleFragmentIntent<T> intent, SimpleFragmentContainerKey key) {
-        T fragment = fm.create(intent, key);
+        T fragment = fm.create(intent, key.withParent(parentKey));
         maybeAttachFragment(rootView, fragment);
         return fragment;
     }
@@ -99,19 +89,12 @@ public class SimpleFragmentContainer {
      * @param <T>    The fragment class.
      * @return The created fragment.
      */
-    public <T extends SimpleFragment> T findOrAdd(SimpleFragmentIntent<T> intent, @IdRes int viewId) {
-        return findOrAdd(intent, new LayoutKey(parentKey, viewId));
-    }
-
-    public <T extends SimpleFragment> T findOrAddDialog(SimpleFragmentIntent<T> intent, String tag) {
-        return findOrAdd(intent, new DialogKey(parentKey, tag));
-    }
-
     @SuppressWarnings("unchecked")
     public <T extends SimpleFragment> T findOrAdd(SimpleFragmentIntent<T> intent, SimpleFragmentContainerKey key) {
+        SimpleFragmentContainerKey nestedKey = key.withParent(parentKey);
         for (SimpleFragmentContainerKey testKey : attachedKeys) {
-            if (testKey.equals(key)) {
-                return (T) fm.find(key);
+            if (testKey.equals(nestedKey)) {
+                return (T) fm.find(nestedKey);
             }
         }
         return add(intent, key);
@@ -142,27 +125,11 @@ public class SimpleFragmentContainer {
      * @param viewId The view id to search with.
      * @return The fragment or null if it cannot be found.
      */
-    public SimpleFragment find(@IdRes int viewId) {
-        // We can't just search for a LayoutKey because we don't know the index in the backstack.
-        for (SimpleFragmentContainerKey testKey : attachedKeys) {
-            if (testKey instanceof LayoutKey) {
-                LayoutKey key = (LayoutKey) testKey;
-                if (equals(parentKey, key.getParent()) && key.getViewId() == viewId) {
-                    return fm.find(key);
-                }
-            }
-        }
-        return null;
-    }
-
-    public SimpleFragment findDialog(String tag) {
-        return find(new DialogKey(parentKey, tag));
-    }
-
     public SimpleFragment find(SimpleFragmentContainerKey key) {
-        for (SimpleFragmentContainerKey testKey : attachedKeys) {
-            if (testKey.equals(key)) {
-                return fm.find(key);
+        for (int i = 0; i < attachedKeys.size(); i++) {
+            SimpleFragmentContainerKey testKey = attachedKeys.get(i);
+            if (testKey.matches(key)) {
+                return fm.find(testKey);
             }
         }
         return null;
@@ -209,8 +176,8 @@ public class SimpleFragmentContainer {
      * @param <T>    The fragment type.
      * @return The new fragment.
      */
-    public <T extends SimpleFragment> T push(SimpleFragmentIntent<T> intent, @IdRes int viewId) {
-        return backStack.push(intent, parentKey, viewId);
+    public <T extends SimpleFragment> T push(SimpleFragmentIntent<T> intent, LayoutKey key) {
+        return backStack.push(intent, key.withParent(parentKey));
     }
 
     /**
