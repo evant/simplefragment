@@ -8,7 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import me.tatarka.simplefragment.SimpleFragment;
-import me.tatarka.simplefragment.SimpleFragmentContainer;
+import me.tatarka.simplefragment.SimpleFragmentManager;
 import me.tatarka.simplefragment.SimpleFragmentIntent;
 import me.tatarka.simplefragment.key.LayoutKey;
 
@@ -22,7 +22,7 @@ public class SimpleFragmentWithBackStack extends SimpleFragment implements Simpl
 
     @Override
     public void onCreate(Context context, @Nullable Bundle state) {
-        final SimpleFragmentContainer container = getSimpleFragmentContainer();
+        final SimpleFragmentManager container = getSimpleFragmentManager();
 
         container.findOrAdd(
                 SimpleFragmentIntent.of(SimpleFragmentChildWithBackStack.class)
@@ -39,7 +39,7 @@ public class SimpleFragmentWithBackStack extends SimpleFragment implements Simpl
 
     @Override
     public void onAdd(int viewId, int stackCount) {
-        getSimpleFragmentContainer().push(
+        getSimpleFragmentManager().push(
                 SimpleFragmentIntent.of(SimpleFragmentChildWithBackStack.class)
                         .putExtra(ARG_STACK_COUNT, stackCount + 1)
                         .putExtra(ARG_VIEW_ID, viewId), LayoutKey.of(viewId));
@@ -47,6 +47,6 @@ public class SimpleFragmentWithBackStack extends SimpleFragment implements Simpl
 
     @Override
     public void onRemove(SimpleFragmentChildWithBackStack fragment) {
-        getSimpleFragmentContainer().remove(fragment);
+        getSimpleFragmentManager().remove(fragment);
     }
 }

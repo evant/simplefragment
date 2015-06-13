@@ -47,7 +47,7 @@ public class SimpleFragmentDialog extends SimpleDialogFragment {
 
     private OnAlertButtonClickedListener getListener() {
         Object parent = getParent();
-        if (parent instanceof SimpleFragmentChildWithBackStack.OnBackStackRequestListener) {
+        if (parent instanceof OnAlertButtonClickedListener) {
             return (OnAlertButtonClickedListener) parent;
         } else {
             return EMPTY_LISTENER;

@@ -5,15 +5,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 
-import me.tatarka.simplefragment.SimpleFragmentContainer;
-import me.tatarka.simplefragment.SimpleFragmentContainerProvider;
 import me.tatarka.simplefragment.SimpleFragmentManager;
 import me.tatarka.simplefragment.SimpleFragmentManagerProvider;
+import me.tatarka.simplefragment.SimpleFragmentStateManager;
 
 /**
  * Created by evan on 3/7/15.
  */
-public class SimpleFragmentActivity extends Activity implements SimpleFragmentManagerProvider, SimpleFragmentContainerProvider {
+public class SimpleFragmentActivity extends Activity implements SimpleFragmentManagerProvider {
     private SimpleFragmentDelegate delegate;
 
     @Override
@@ -82,11 +81,6 @@ public class SimpleFragmentActivity extends Activity implements SimpleFragmentMa
     @Override
     public SimpleFragmentManager getSimpleFragmentManager() {
         return getSimpleFragmentDelegate().getSimpleFragmentManager();
-    }
-
-    @Override
-    public SimpleFragmentContainer getSimpleFragmentContainer() {
-        return getSimpleFragmentDelegate().getSimpleFragmentContainer();
     }
 
     public SimpleFragmentDelegate getSimpleFragmentDelegate() {

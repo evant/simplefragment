@@ -14,22 +14,21 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 
-import me.tatarka.simplefragment.SimpleFragmentContainer;
-import me.tatarka.simplefragment.SimpleFragmentContainerProvider;
 import me.tatarka.simplefragment.SimpleFragmentManager;
 import me.tatarka.simplefragment.SimpleFragmentManagerProvider;
+import me.tatarka.simplefragment.SimpleFragmentStateManager;
 import me.tatarka.simplefragment.SimpleFragmentViewInflater;
 
 /**
  * Created by evan on 3/7/15.
  */
-public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, SimpleFragmentContainerProvider, LayoutInflaterFactory {
+public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, LayoutInflaterFactory {
     private static final String TAG = "SimpleFragmentDelegate";
     private static final String STATE = "me.tatarka.simplefragment.STATE";
 
     private Activity activity;
-    private SimpleFragmentManager fm;
-    private SimpleFragmentContainer cm;
+    private SimpleFragmentStateManager stateManager;
+    private SimpleFragmentManager manager;
     private SimpleFragmentViewInflater viewInflater;
     private LayoutInflaterFactory delegateFactory;
     private boolean isRootViewSet = false;
@@ -46,8 +45,8 @@ public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, Si
         Activity activity = this.activity;
 
         if (savedInstanceState == null) {
-            fm = new SimpleFragmentManager(activity);
-            cm = new SimpleFragmentContainer(fm, null);
+            stateManager = new SimpleFragmentStateManager(activity);
+            manager = new SimpleFragmentManager(stateManager, null);
         } else {
             Object lastNonConfigInstance;
             if (this.activity instanceof FragmentActivity) {
@@ -58,15 +57,15 @@ public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, Si
 
             if (lastNonConfigInstance != null) {
                 NonConfigInstance instance = (NonConfigInstance) lastNonConfigInstance;
-                fm = instance.fm;
-                fm.restoreConfigurationState(activity);
-                cm = instance.cm;
+                stateManager = instance.stateManager;
+                stateManager.restoreConfigurationState(activity);
+                manager = instance.manager;
             } else {
                 State state = savedInstanceState.getParcelable(STATE);
-                fm = new SimpleFragmentManager(activity);
-                cm = new SimpleFragmentContainer(fm, null);
-                fm.restoreState(state.fmState);
-                cm.restoreState(state.cmState);
+                stateManager = new SimpleFragmentStateManager(activity);
+                manager = new SimpleFragmentManager(stateManager, null);
+                stateManager.restoreState(state.stateManagerState);
+                manager.restoreState(state.managerState);
             }
         }
     }
@@ -75,24 +74,24 @@ public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, Si
         if (!isRootViewSet) {
             isRootViewSet = true;
             View rootView = activity.findViewById(android.R.id.content);
-            cm.setView(rootView);
+            manager.setView(rootView);
         }
     }
 
     public void onDestroy() {
-        fm.clearConfigurationState();
-        cm.clearView();
+        stateManager.clearConfigurationState();
+        manager.clearView();
     }
 
     public void onSaveInstanceState(Bundle outState) {
-        State state = new State(fm.saveState(), cm.saveState());
+        State state = new State(stateManager.saveState(), manager.saveState());
         outState.putParcelable(STATE, state);
     }
 
     public Object onRetainNonConfigurationInstance(@Nullable Object clientState) {
         NonConfigInstance instance = new NonConfigInstance();
-        instance.fm = fm;
-        instance.cm = cm;
+        instance.stateManager = stateManager;
+        instance.manager = manager;
         instance.clientState = clientState;
         return instance;
     }
@@ -145,31 +144,26 @@ public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, Si
 
     @Override
     public SimpleFragmentManager getSimpleFragmentManager() {
-        return fm;
-    }
-
-    @Override
-    public SimpleFragmentContainer getSimpleFragmentContainer() {
-        return cm;
+        return manager;
     }
 
     public boolean onBackPress() {
-        return fm.getBackStack().pop();
+        return stateManager.getBackStack().pop();
     }
 
     private static class NonConfigInstance {
-        SimpleFragmentManager fm;
-        SimpleFragmentContainer cm;
+        SimpleFragmentStateManager stateManager;
+        SimpleFragmentManager manager;
         Object clientState;
     }
 
     private static class State implements Parcelable {
-        Parcelable fmState;
-        Parcelable cmState;
+        Parcelable stateManagerState;
+        Parcelable managerState;
 
-        State(Parcelable fmState, Parcelable cmState) {
-            this.fmState = fmState;
-            this.cmState = cmState;
+        State(Parcelable stateManagerState, Parcelable managerState) {
+            this.stateManagerState = stateManagerState;
+            this.managerState = managerState;
         }
 
         @Override
@@ -179,13 +173,13 @@ public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, Si
 
         @Override
         public void writeToParcel(Parcel dest, int flags) {
-            dest.writeParcelable(fmState, flags);
-            dest.writeParcelable(cmState, flags);
+            dest.writeParcelable(stateManagerState, flags);
+            dest.writeParcelable(managerState, flags);
         }
 
         private State(Parcel in) {
-            this.fmState = in.readParcelable(SimpleFragmentManager.class.getClassLoader());
-            this.cmState = in.readParcelable(SimpleFragmentContainer.class.getClassLoader());
+            this.stateManagerState = in.readParcelable(SimpleFragmentStateManager.class.getClassLoader());
+            this.managerState = in.readParcelable(SimpleFragmentManager.class.getClassLoader());
         }
 
         public static final Parcelable.Creator<State> CREATOR = new Parcelable.Creator<State>() {

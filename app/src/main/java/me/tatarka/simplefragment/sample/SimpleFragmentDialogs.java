@@ -33,7 +33,7 @@ public class SimpleFragmentDialogs extends SimpleFragment implements SimpleFragm
         view.findViewById(R.id.show_dialog).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getSimpleFragmentContainer().add(SimpleFragmentIntent.of(SimpleFragmentDialog.class), DIALOG_KEY).show();
+                getSimpleFragmentManager().add(SimpleFragmentIntent.of(SimpleFragmentDialog.class), DIALOG_KEY).show();
             }
         });
     }

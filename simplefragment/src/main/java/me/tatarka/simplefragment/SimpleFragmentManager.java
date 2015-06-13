@@ -1,244 +1,291 @@
 package me.tatarka.simplefragment;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
-import android.support.v4.view.LayoutInflaterCompat;
-import android.view.LayoutInflater;
+import android.support.v4.util.ArrayMap;
 import android.view.View;
-import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import me.tatarka.simplefragment.backstack.SimpleFragmentBackStack;
 import me.tatarka.simplefragment.key.LayoutKey;
+import me.tatarka.simplefragment.key.SimpleFragmentContainerKey;
 import me.tatarka.simplefragment.key.SimpleFragmentKey;
 
 /**
- * This class manages the state of {@code SimpleFragments}. It creates and destroys them, attaches
- * and detaches them from the view hierarchy, and saves and restores their state. Other classes
- * build upon this to manage the fragments in a certain way, like nesting them in an Activity or
- * paging between them in a ViewPager.
+ * The manager where you can directly add and remove fragments to the view hierarchy. It supports
+ * nesting and a backstack.
  */
-public class SimpleFragmentManager {
-    private Activity activity;
-    private List<SimpleFragment> fragments;
+public class SimpleFragmentManager implements SimpleFragmentManagerProvider {
+    private SimpleFragmentStateManager stateManager;
+    private SimpleFragmentKey parentKey;
+    private View rootView;
+    private final List<SimpleFragmentContainerKey> attachedKeys = new ArrayList<>();
+    private final Map<SimpleFragmentContainerKey, SimpleFragment> fragmentsPendingAttach = new ArrayMap<>();
     private SimpleFragmentBackStack backStack;
 
-    public SimpleFragmentManager(Activity activity) {
-        this.activity = activity;
-        this.fragments = new ArrayList<>();
-        this.backStack = new SimpleFragmentBackStack(this);
+    public SimpleFragmentManager(SimpleFragmentStateManager stateManager, @Nullable SimpleFragmentKey parentKey) {
+        this.stateManager = stateManager;
+        this.parentKey = parentKey;
+        this.backStack = stateManager.getBackStack();
+        this.backStack.addListener(parentKey, new BackStackListener());
     }
 
-    public Activity getActivity() {
-        return activity;
+    @Override
+    public SimpleFragmentManager getSimpleFragmentManager() {
+        return this;
     }
 
-    public List<SimpleFragment> getFragments() {
-        return Collections.unmodifiableList(fragments);
+    /**
+     * Returns the underlying {@link SimpleFragmentStateManager} for this container.
+     */
+    public SimpleFragmentStateManager getStateManager() {
+        return stateManager;
     }
 
-    public SimpleFragmentBackStack getBackStack() {
-        return backStack;
-    }
+    public void setView(View rootView) {
+        this.rootView = rootView;
 
-    @Nullable
-    public SimpleFragment find(SimpleFragmentKey key) {
-        if (key == null) {
-            return null;
+        // Restore previously attached fragments.
+        for (SimpleFragmentKey key : attachedKeys) {
+            SimpleFragment childFragment = stateManager.find(key);
+            attachFragment(rootView, childFragment);
         }
-        for (SimpleFragment fragment : fragments) {
-            if (fragment.getKey().equals(key)) {
-                return fragment;
+
+        // View is ready, we can createView all pending fragments now.
+        for (Map.Entry<SimpleFragmentContainerKey, SimpleFragment> entry : fragmentsPendingAttach.entrySet()) {
+            attachFragment(rootView, entry.getValue());
+            attachedKeys.add(entry.getKey());
+        }
+        fragmentsPendingAttach.clear();
+    }
+
+    public void clearView() {
+        for (SimpleFragmentContainerKey key : attachedKeys) {
+            SimpleFragment fragment = stateManager.find(key);
+            key.detach(this, rootView, fragment);
+
+        }
+        rootView = null;
+    }
+
+    /**
+     * Creates a {@code SimpleFragment} and attaches it to the view with the given id.
+     *
+     * @param intent The intent to create the fragment with.
+     * @param viewId The view id to createView to.
+     * @param <T>    The fragment class.
+     * @return The created fragment.
+     */
+    public <T extends SimpleFragment> T add(SimpleFragmentIntent<T> intent, SimpleFragmentContainerKey key) {
+        T fragment = stateManager.create(intent, key.withParent(parentKey));
+        maybeAttachFragment(rootView, fragment);
+        return fragment;
+    }
+
+    /**
+     * Finds and existing {@code SimpleFragment} or creates a new one if it doesn't exist and
+     * attaches it to the view with the given id.
+     *
+     * @param intent The intent to create the fragment with.
+     * @param viewId The view id to createView to.
+     * @param <T>    The fragment class.
+     * @return The created fragment.
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends SimpleFragment> T findOrAdd(SimpleFragmentIntent<T> intent, SimpleFragmentContainerKey key) {
+        SimpleFragmentContainerKey nestedKey = key.withParent(parentKey);
+        for (SimpleFragmentContainerKey testKey : attachedKeys) {
+            if (testKey.equals(nestedKey)) {
+                return (T) stateManager.find(nestedKey);
+            }
+        }
+        return add(intent, key);
+    }
+
+    /**
+     * Detaches the given {@code SimpleFragment} and destroys it.
+     *
+     * @param fragment The fragment to remove.
+     */
+    public void remove(SimpleFragment fragment) {
+        SimpleFragmentContainerKey key = (SimpleFragmentContainerKey) fragment.getKey();
+        attachedKeys.remove(key);
+
+        if (key instanceof LayoutKey && backStack.remove((LayoutKey) key)) {
+            return;
+        }
+
+        if (fragment.getView() != null) {
+            key.detach(this, rootView, fragment);
+        }
+        stateManager.destroy(fragment);
+    }
+
+    /**
+     * Finds a {@code SimpleFragment} attached to the given view id.
+     *
+     * @param viewId The view id to search with.
+     * @return The fragment or null if it cannot be found.
+     */
+    public SimpleFragment find(SimpleFragmentContainerKey key) {
+        for (int i = 0; i < attachedKeys.size(); i++) {
+            SimpleFragmentContainerKey testKey = attachedKeys.get(i);
+            if (testKey.matches(key)) {
+                return stateManager.find(testKey);
             }
         }
         return null;
     }
 
     /**
-     * Constructs a new {@code SimpleFragment} and adds it to this manager. This will trigger {@link
-     * me.tatarka.simplefragment.SimpleFragment#onCreate(android.content.Context,
-     * android.os.Bundle)} immediately.
+     * Returns a list of all fragments that are in this container, including non-attached ones. (A
+     * fragment may not be attached if it's in the back stack). If you only want attached fragments,
+     * use {@link #getAttachedFragments()} instead.
      *
-     * @param intent The {@code Intent} to construct the {@code SimpleFragment} with. This {@code
-     *               Intent} must have the {@code SimpleFragment} class name and may optionally
-     *               contain extras that you want to pass to the fragment.
-     * @return The new {@code SimpleFragment}.
+     * @return The list of fragments.
      */
-    @SuppressWarnings("unchecked")
-    public <T extends SimpleFragment> T create(SimpleFragmentIntent<T> intent, SimpleFragmentKey key) {
-        if (find(key) != null) {
-            // Special case for better error reporting of layout id's
-            String keyName;
-            if (key instanceof LayoutKey) {
-                keyName = ((LayoutKey) key).toString(activity.getResources());
-            } else {
-                keyName = key.toString();
+    public List<SimpleFragment> getFragments() {
+        List<SimpleFragment> fragments = new ArrayList<>();
+        for (SimpleFragment fragment : stateManager.getFragments()) {
+            SimpleFragmentKey key = fragment.getKey();
+            if (key instanceof SimpleFragmentContainerKey && equals(key.getParent(), parentKey)) {
+                fragments.add(fragment);
             }
-            throw new IllegalArgumentException("A SimpleFragment has already been added with the given key '" + keyName + "'.");
         }
-        T fragment = (T) SimpleFragment.newInstance(intent.getSimpleFragmentClassName());
-        fragments.add(fragment);
-        fragment.create(this, intent, key);
-        return fragment;
+        return Collections.unmodifiableList(fragments);
     }
 
     /**
-     * Returns an existing {@code SimpleFragment} that matches the given path or constructs a new
-     * one with the given {@code SimpleFragmentIntent} if it doesn't exists.
+     * Returns a list of all fragments that are currently attached to this containers view
+     * hierarchy.
      *
-     * @param intent The intent to create the fragment with if it's not found.
-     * @param key    The path to find or create the fragment with.
-     * @param <T>    The fragment Type
-     * @return The found or created fragment
-     * @throws IllegalArgumentException If the given intent fragment class and the found fragment
-     *                                  class do not match.
+     * @return The list of fragments.
      */
-    @SuppressWarnings("unchecked")
-    public <T extends SimpleFragment> T findOrCreate(SimpleFragmentIntent<T> intent, SimpleFragmentKey key) {
-        SimpleFragment currentFragment = find(key);
-        if (currentFragment != null) {
-            if (!currentFragment.getClass().getName().equals(intent.getSimpleFragmentClassName())) {
-                throw new IllegalArgumentException("SimpleFragmentIntent class does not match existing SimpleFragment class. Expected '" + currentFragment.getClass() + "' but found '" + intent.getSimpleFragmentClassName() + "'.");
-            }
-            return (T) currentFragment;
+    public List<SimpleFragment> getAttachedFragments() {
+        List<SimpleFragment> fragments = new ArrayList<>(attachedKeys.size());
+        for (SimpleFragmentContainerKey key : attachedKeys) {
+            fragments.add(stateManager.find(key));
+        }
+        return Collections.unmodifiableList(fragments);
+    }
+
+    /**
+     * Pushes the given fragment onto the back stack, replacing the previous fragment at the given
+     * view id. You can later restore the state with {@link #pop()}.
+     *
+     * @param intent The fragment to push on the stack.
+     * @param viewId The view id to createView the fragment to.
+     * @param <T>    The fragment type.
+     * @return The new fragment.
+     */
+    public <T extends SimpleFragment> T push(SimpleFragmentIntent<T> intent, LayoutKey key) {
+        return backStack.push(intent, key.withParent(parentKey));
+    }
+
+    /**
+     * Pops the last fragment added to the back stack, reattaching the previous one if it exists.
+     * This is only scoped to this container.
+     *
+     * @return True if the was a fragment on the back stack to pop, false otherwise.
+     */
+    public boolean pop() {
+        return backStack.pop(parentKey);
+    }
+
+    @Nullable
+    public SimpleFragmentKey getParentKey() {
+        return parentKey;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder("SimpleFragmentContainer");
+        if (parentKey != null) {
+            builder.append('(').append(parentKey).append(')');
+        }
+        return builder.toString();
+    }
+
+    /**
+     * Attaches the fragment to the rootView given it's path and adds it to the attached keys if
+     * successful. If the root view hasn't been set yet, this attachment will be delayed until the
+     * root view is set.
+     */
+    private void maybeAttachFragment(View rootView, SimpleFragment fragment) {
+        SimpleFragmentContainerKey key = (SimpleFragmentContainerKey) fragment.getKey();
+        if (rootView != null) {
+            attachFragment(rootView, fragment);
+            attachedKeys.add(key);
         } else {
-            return create(intent, key);
+            fragmentsPendingAttach.put(key, fragment);
         }
     }
 
     /**
-     * Destroys the given {@code SimpleFragment} and removes it from this manager. If the fragment
-     * is attached to the view hierarchy it's view will be destroyed as well.
-     *
-     * @param fragment The {@code SimpleFragment} to destroy.
-     * @throws java.lang.IllegalArgumentException If the given fragment is null or was not added to
-     *                                            this manager.
+     * Attaches the fragment to the rootView given it's path.
      */
-    public void destroy(SimpleFragment fragment) {
-        if (fragment == null) {
-            throw new IllegalArgumentException("SimpleFragment cannot be null.");
-        }
-        if (fragment.getView() != null) {
-            destroyView(fragment);
-        }
-        if (!fragments.remove(fragment)) {
-            throw new IllegalArgumentException("Attempting to remove fragment that was not added: '" + fragment + "'");
+    private void attachFragment(View rootView, SimpleFragment fragment) {
+        ((SimpleFragmentContainerKey) fragment.getKey()).attach(this, rootView, fragment);
+    }
+
+    public Activity getActivity() {
+        return stateManager.getActivity();
+    }
+
+    private class BackStackListener implements SimpleFragmentBackStack.BackStackListener {
+        @Override
+        public void onReplace(SimpleFragment oldFragment, SimpleFragment newFragment) {
+            SimpleFragmentContainerKey oldKey = (SimpleFragmentContainerKey) oldFragment.getKey();
+            attachedKeys.remove(oldKey);
+            if (rootView != null) {
+                oldKey.detach(SimpleFragmentManager.this, rootView, oldFragment);
+            }
+            maybeAttachFragment(rootView, newFragment);
         }
     }
 
-    /**
-     * Creates the view for the given fragment. This will trigger {@link
-     * me.tatarka.simplefragment.SimpleFragment#onCreateView(LayoutInflater, ViewGroup)}
-     * immediately. This will <em>not</em> occur automatically on configuration changes, you are
-     * responsible for calling it again in those cases.
-     *
-     * @param fragment The {@code SimpleFragment} to createView.
-     * @throws java.lang.IllegalArgumentException If the given fragment is null or was not added to
-     *                                            this manager.
-     */
-    public View createView(SimpleFragment fragment, LayoutInflater layoutInflater, @Nullable ViewGroup parentView) {
-        if (fragment == null) {
-            throw new IllegalArgumentException("SimpleFragment cannot be null.");
-        }
-        if (!fragments.contains(fragment)) {
-            throw new IllegalArgumentException("Attempting to createView fragment that was not added: '" + fragment + "'");
-        }
-
-        if (fragment.getView() != null) {
-            throw new IllegalArgumentException("Attempting to createView fragment that has already been attached.");
-        }
-
-        // To support <fragment> tags in nested layouts, we need a custom inflater.
-        LayoutInflater fragmentInflater = layoutInflater.cloneInContext(activity);
-        LayoutInflaterCompat.setFactory(fragmentInflater, new SimpleFragmentViewInflater(fragment.getSimpleFragmentContainer()));
-
-        return fragment.createView(fragmentInflater, parentView);
-    }
-
-    /**
-     * Destroys the {@code SimpleFragment}'s view. If it has already been destroyed is a no-op.
-     *
-     * @param fragment The The {@code SimpleFragment} to destroyView.
-     * @return The view being destroyed so you can remove it from the layout hierarchy if required,
-     * or null if the fragment's view has already been destroyed.
-     */
-    public View destroyView(SimpleFragment fragment) {
-        if (fragment == null) {
-            throw new IllegalArgumentException("SimpleFragment cannot be null.");
-        }
-        View view = fragment.getView();
-        if (view != null) {
-            fragment.destroyView();
-        }
-        return view;
+    private static boolean equals(Object a, Object b) {
+        return (a == null) ? (b == null) : a.equals(b);
     }
 
     public Parcelable saveState() {
-        Parcelable[] fragmentStates = new Parcelable[fragments.size()];
-        for (int i = 0; i < fragments.size(); i++) {
-            SimpleFragment fragment = fragments.get(i);
-            fragmentStates[i] = fragment.saveState();
-        }
-        return new State(fragmentStates, backStack.saveState());
+        return new State(attachedKeys);
     }
 
     public void restoreState(Parcelable parcelable) {
         State state = (State) parcelable;
-        backStack.restoreState(state.backStackState);
-
-        // We need to loop twice, once to add all the fragments to the manager, and once to restore
-        // their states. This is so fragments will always see their children as existing.
-        fragments = new ArrayList<>(state.fragmentStates.length);
-        for (Parcelable fragmentState : state.fragmentStates) {
-            SimpleFragment fragment = SimpleFragment.newInstance(fragmentState);
-            fragments.add(fragment);
-        }
-        // Looping backwards makes it more likely that child states are restored before parents.
-        for (int i = state.fragmentStates.length - 1; i >= 0; i--) {
-            SimpleFragment fragment = fragments.get(i);
-            Parcelable fragmentState = state.fragmentStates[i];
-            fragment.restoreState(this, fragmentState);
-        }
+        attachedKeys.addAll(state.attachedKeys);
     }
 
-    /**
-     * Clears any references to state that will change on a configuration change and detaches all
-     * fragments. This <em>must</em> be called when retaining the manager on a configuration change.
-     * You can restore this cleared state with {@link #restoreConfigurationState(Activity)}.
-     */
-    public void clearConfigurationState() {
-        for (SimpleFragment fragment : fragments) {
-            if (fragment.getView() != null) {
-                destroyView(fragment);
+    static class State implements Parcelable {
+        List<SimpleFragmentContainerKey> attachedKeys;
+
+        State(List<SimpleFragmentContainerKey> attachedKeys) {
+            this.attachedKeys = attachedKeys;
+        }
+
+        State(Parcel in) {
+            attachedKeys = new ArrayList<>();
+            in.readList(attachedKeys, getClass().getClassLoader());
+        }
+
+        public static final Creator<State> CREATOR = new Creator<State>() {
+            @Override
+            public State createFromParcel(Parcel in) {
+                return new State(in);
             }
-        }
-        activity = null;
-    }
 
-    /**
-     * Restores references to configuration state and restores all fragments that were detaches with
-     * {@link #clearConfigurationState()}.
-     *
-     * @param activity the activity to restore to.
-     */
-    public void restoreConfigurationState(Activity activity) {
-        this.activity = activity;
-    }
-
-    private static class State implements Parcelable {
-        Parcelable[] fragmentStates;
-        Parcelable backStackState;
-
-        State(Parcelable[] fragmentStates, Parcelable backStackState) {
-            this.fragmentStates = fragmentStates;
-            this.backStackState = backStackState;
-        }
+            @Override
+            public State[] newArray(int size) {
+                return new State[size];
+            }
+        };
 
         @Override
         public int describeContents() {
@@ -247,24 +294,7 @@ public class SimpleFragmentManager {
 
         @Override
         public void writeToParcel(Parcel dest, int flags) {
-            dest.writeParcelableArray(this.fragmentStates, flags);
-            dest.writeParcelable(backStackState, flags);
+            dest.writeList(attachedKeys);
         }
-
-        @SuppressWarnings("unchecked")
-        private State(Parcel in) {
-            this.fragmentStates = in.readParcelableArray(getClass().getClassLoader());
-            this.backStackState = in.readParcelable(getClass().getClassLoader());
-        }
-
-        public static final Parcelable.Creator<State> CREATOR = new Parcelable.Creator<State>() {
-            public State createFromParcel(Parcel source) {
-                return new State(source);
-            }
-
-            public State[] newArray(int size) {
-                return new State[size];
-            }
-        };
     }
 }

@@ -10,8 +10,8 @@ import android.view.View;
 
 import me.tatarka.simplefragment.SimpleDialogFragment;
 import me.tatarka.simplefragment.SimpleFragment;
-import me.tatarka.simplefragment.SimpleFragmentContainer;
 import me.tatarka.simplefragment.SimpleFragmentManager;
+import me.tatarka.simplefragment.SimpleFragmentStateManager;
 
 /**
  * An implementation of {@code SimpleFragmentKey} used to show dialogs, it requires a unique tag.
@@ -34,12 +34,12 @@ public class DialogKey implements SimpleFragmentContainerKey {
     }
 
     @Override
-    public void attach(final SimpleFragmentContainer container, View rootView, final SimpleFragment fragment) {
+    public void attach(final SimpleFragmentManager container, View rootView, final SimpleFragment fragment) {
         if (!(fragment instanceof SimpleDialogFragment)) {
             throw new IllegalStateException(fragment + " is not a SimpleDialogFragment");
         }
-        SimpleFragmentManager fm = container.getSimpleFragmentManager();
-        fm.createView(fragment, LayoutInflater.from(rootView.getContext()), null);
+        SimpleFragmentStateManager stateManager = container.getStateManager();
+        stateManager.createView(fragment, LayoutInflater.from(rootView.getContext()), null);
         Dialog dialog = ((SimpleDialogFragment) fragment).getDialog();
         if (dialog != null) {
             dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
@@ -52,9 +52,9 @@ public class DialogKey implements SimpleFragmentContainerKey {
     }
 
     @Override
-    public void detach(SimpleFragmentContainer container, View rootView, SimpleFragment fragment) {
-        SimpleFragmentManager fm = container.getSimpleFragmentManager();
-        fm.destroyView(fragment);
+    public void detach(SimpleFragmentManager container, View rootView, SimpleFragment fragment) {
+        SimpleFragmentStateManager stateManager = container.getStateManager();
+        stateManager.destroyView(fragment);
     }
 
     @Override

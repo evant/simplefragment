@@ -13,10 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import me.tatarka.simplefragment.SimpleFragment;
-import me.tatarka.simplefragment.SimpleFragmentContainer;
-import me.tatarka.simplefragment.SimpleFragmentContainerProvider;
-import me.tatarka.simplefragment.SimpleFragmentIntent;
 import me.tatarka.simplefragment.SimpleFragmentManager;
+import me.tatarka.simplefragment.SimpleFragmentManagerProvider;
+import me.tatarka.simplefragment.SimpleFragmentIntent;
+import me.tatarka.simplefragment.SimpleFragmentStateManager;
 import me.tatarka.simplefragment.key.SimpleFragmentKey;
 import me.tatarka.simplefragment.key.UuidKey;
 
@@ -27,35 +27,35 @@ import me.tatarka.simplefragment.key.UuidKey;
  */
 public abstract class SimpleFragmentPagerAdapter extends PagerAdapter {
     private SimpleFragmentKey parentKey;
-    private SimpleFragmentManager fm;
+    private SimpleFragmentStateManager stateManager;
     private LayoutInflater layoutInflater;
     private List<SimpleFragmentIntent> fragmentIntents;
     private SparseArray<SimpleFragmentKey> fragmentKeys;
 
-    public SimpleFragmentPagerAdapter(SimpleFragmentContainerProvider provider) {
-        this(provider.getSimpleFragmentContainer());
+    public SimpleFragmentPagerAdapter(SimpleFragmentManagerProvider provider) {
+        this(provider.getSimpleFragmentManager());
     }
 
-    public SimpleFragmentPagerAdapter(SimpleFragmentContainer cm) {
-        this.parentKey = cm.getParentKey();
-        this.fm = cm.getSimpleFragmentManager();
-        this.layoutInflater = fm.getActivity().getLayoutInflater();
+    public SimpleFragmentPagerAdapter(SimpleFragmentManager manager) {
+        this.parentKey = manager.getParentKey();
+        this.stateManager = manager.getStateManager();
+        this.layoutInflater = stateManager.getActivity().getLayoutInflater();
         this.fragmentKeys = new SparseArray<>();
         this.fragmentIntents = new ArrayList<>();
     }
 
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
-        SimpleFragment fragment = fm.find(fragmentKeys.get(position));
+        SimpleFragment fragment = stateManager.find(fragmentKeys.get(position));
         if (fragment == null) {
             SimpleFragmentIntent intent = getItem(position);
             if (intent == null) {
                 throw new NullPointerException("getItem() returned null.");
             }
             SimpleFragmentKey key = UuidKey.create(parentKey);
-            fragment = fm.create(intent, key);
+            fragment = stateManager.create(intent, key);
         }
-        View view = fm.createView(fragment, layoutInflater, container);
+        View view = stateManager.createView(fragment, layoutInflater, container);
         container.addView(view);
         fragmentKeys.put(position, fragment.getKey());
         return fragment;
@@ -64,7 +64,7 @@ public abstract class SimpleFragmentPagerAdapter extends PagerAdapter {
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
         SimpleFragment fragment = (SimpleFragment) object;
-        View view = fm.destroyView(fragment);
+        View view = stateManager.destroyView(fragment);
         container.removeView(view);
     }
 
@@ -78,11 +78,11 @@ public abstract class SimpleFragmentPagerAdapter extends PagerAdapter {
         List<Integer> keysToRemove = new ArrayList<>();
         for (int i = 0; i < fragmentKeys.size(); i++) {
             int oldPosition = fragmentKeys.keyAt(i);
-            SimpleFragment fragment = fm.find(fragmentKeys.valueAt(i));
+            SimpleFragment fragment = stateManager.find(fragmentKeys.valueAt(i));
             int newPosition = getItemPosition(fragment);
             if (newPosition == POSITION_NONE) {
                 keysToRemove.add(oldPosition);
-                fm.destroy(fragment);
+                stateManager.destroy(fragment);
             } else if (oldPosition != POSITION_UNCHANGED && oldPosition != newPosition) {
                 keysToRemove.add(oldPosition);
                 newKeyPositions.put(newPosition, fragment.getKey());
@@ -163,7 +163,7 @@ public abstract class SimpleFragmentPagerAdapter extends PagerAdapter {
         if (position < 0 || position >= getCount()) {
             throw new IndexOutOfBoundsException();
         }
-        return fm.find(fragmentKeys.get(position));
+        return stateManager.find(fragmentKeys.get(position));
     }
 
     /**

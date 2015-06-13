@@ -12,6 +12,7 @@ import java.util.Map;
 import me.tatarka.simplefragment.SimpleFragment;
 import me.tatarka.simplefragment.SimpleFragmentIntent;
 import me.tatarka.simplefragment.SimpleFragmentManager;
+import me.tatarka.simplefragment.SimpleFragmentStateManager;
 import me.tatarka.simplefragment.key.LayoutKey;
 import me.tatarka.simplefragment.key.SimpleFragmentKey;
 
@@ -20,20 +21,20 @@ import me.tatarka.simplefragment.key.SimpleFragmentKey;
  * SimpleFragmentManager}. Each container should register itself with {@link
  * #addListener(SimpleFragmentKey, BackStackListener)} in order to respond to pushing and poping a
  * fragment of the back-stack. You should not use this directly, instead delegate through the {@link
- * me.tatarka.simplefragment.SimpleFragmentContainer}.
+ * SimpleFragmentManager}.
  */
 public class SimpleFragmentBackStack {
-    private SimpleFragmentManager fm;
+    private SimpleFragmentStateManager stateManager;
     private List<LayoutKey> backStack;
     private Map<SimpleFragmentKey, BackStackListener> listeners = new HashMap<>();
 
-    public SimpleFragmentBackStack(SimpleFragmentManager fm) {
-        this.fm = fm;
+    public SimpleFragmentBackStack(SimpleFragmentStateManager stateManager) {
+        this.stateManager = stateManager;
         this.backStack = new ArrayList<>();
     }
 
-    private void restoreFm(SimpleFragmentManager fm) {
-        this.fm = fm;
+    private void restoreFm(SimpleFragmentStateManager stateManager) {
+        this.stateManager = stateManager;
     }
 
     /**
@@ -58,7 +59,7 @@ public class SimpleFragmentBackStack {
         }
         LayoutKey newKey = key.withIndex(index);
         backStack.add(newKey);
-        T fragment = fm.create(intent, newKey);
+        T fragment = stateManager.create(intent, newKey);
         BackStackListener listener = listeners.get(newKey.getParent());
         if (listener == null) {
             throw new IllegalArgumentException("No listener found for the given key's parent: " + newKey.getParent());
@@ -97,7 +98,7 @@ public class SimpleFragmentBackStack {
 
     public boolean remove(LayoutKey key) {
         if (backStack.remove(key)) {
-            SimpleFragment fragment = fm.find(key);
+            SimpleFragment fragment = stateManager.find(key);
             SimpleFragment previousFragment = findPreviousFragmentKnownIndex(key);
             if (previousFragment != null) {
                 LayoutKey previousFragmentKey = (LayoutKey) previousFragment.getKey();
@@ -107,7 +108,7 @@ public class SimpleFragmentBackStack {
                 }
                 listener.onReplace(fragment, previousFragment);
             }
-            fm.destroy(fragment);
+            stateManager.destroy(fragment);
             return true;
         } else {
             return false;
@@ -117,13 +118,13 @@ public class SimpleFragmentBackStack {
     private SimpleFragment findPreviousFragmentUnknownIndex(LayoutKey key) {
         SimpleFragment previousFragment = null;
         int previousIndex = -1;
-        for (SimpleFragment fragment : fm.getFragments()) {
+        for (SimpleFragment fragment : stateManager.getFragments()) {
             if (fragment.getKey() instanceof LayoutKey) {
                 LayoutKey testKey = (LayoutKey) fragment.getKey();
                 if (equals(testKey.getParent(), key.getParent()) && testKey.getViewId() == key.getViewId()) {
                     if (previousIndex < testKey.getIndex()) {
                         previousIndex = testKey.getIndex();
-                        previousFragment = fm.find(testKey);
+                        previousFragment = stateManager.find(testKey);
                     }
                 }
             }
@@ -136,7 +137,7 @@ public class SimpleFragmentBackStack {
         int index = key.getIndex() - 1;
         while (index >= 0) {
             LayoutKey previousKey = key.withIndex(index);
-            previousFragment = fm.find(previousKey);
+            previousFragment = stateManager.find(previousKey);
             if (previousFragment != null) {
                 break;
             }

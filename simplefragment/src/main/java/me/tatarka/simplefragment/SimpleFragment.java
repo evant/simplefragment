@@ -16,11 +16,11 @@ import me.tatarka.simplefragment.key.SimpleFragmentKey;
 /**
  * Created by evan on 1/11/15.
  */
-public abstract class SimpleFragment implements SimpleFragmentManagerProvider, SimpleFragmentContainerProvider {
+public abstract class SimpleFragment implements SimpleFragmentManagerProvider {
     private View view;
     private State state = new State();
-    private SimpleFragmentManager fm;
-    private SimpleFragmentContainer cm;
+    private SimpleFragmentStateManager stateManager;
+    private SimpleFragmentManager manager;
 
     public abstract void onCreate(Context context, @Nullable Bundle state);
 
@@ -42,12 +42,12 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
         return false;
     }
 
-    final void create(SimpleFragmentManager fm, SimpleFragmentIntent intent, SimpleFragmentKey key) {
-        this.fm = fm;
-        this.cm = new SimpleFragmentContainer(fm, key);
+    final void create(SimpleFragmentStateManager stateManager, SimpleFragmentIntent intent, SimpleFragmentKey key) {
+        this.stateManager = stateManager;
+        this.manager = new SimpleFragmentManager(stateManager, key);
         state.intent = intent;
         state.key = key;
-        onCreate(fm.getActivity().getApplicationContext(), this.state.state);
+        onCreate(stateManager.getActivity().getApplicationContext(), this.state.state);
     }
 
     final View createView(LayoutInflater inflater, ViewGroup parent) {
@@ -55,7 +55,7 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
         if (view == null) {
             throw new NullPointerException("SimpleFragment.onCreateView() in '" + this + "' must not return null.");
         }
-        cm.setView(view);
+        manager.setView(view);
         onViewCreated(view);
         return view;
     }
@@ -63,23 +63,23 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
     final void destroyView() {
         onViewDestroyed(view);
         view = null;
-        cm.clearView();
+        manager.clearView();
     }
 
     final Parcelable saveState() {
         state.state = new Bundle();
         onSave(state.state);
-        state.cmState = cm.saveState();
+        state.managerState = manager.saveState();
         return state;
     }
 
-    final void restoreState(SimpleFragmentManager fm, Parcelable parcelable) {
+    final void restoreState(SimpleFragmentStateManager stateManager, Parcelable parcelable) {
         this.state = (State) parcelable;
         this.state.state.setClassLoader(getClass().getClassLoader());
-        this.fm = fm;
-        this.cm = new SimpleFragmentContainer(fm, state.key);
-        this.cm.restoreState(state.cmState);
-        this.onCreate(fm.getActivity().getApplicationContext(), state.state);
+        this.stateManager = stateManager;
+        this.manager = new SimpleFragmentManager(stateManager, state.key);
+        this.manager.restoreState(state.managerState);
+        this.onCreate(stateManager.getActivity().getApplicationContext(), state.state);
     }
 
     static SimpleFragment newInstance(Parcelable parcelable) {
@@ -118,12 +118,7 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
 
     @Override
     public SimpleFragmentManager getSimpleFragmentManager() {
-        return fm;
-    }
-
-    @Override
-    public SimpleFragmentContainer getSimpleFragmentContainer() {
-        return cm;
+        return manager;
     }
 
     public SimpleFragmentIntent<?> getIntent() {
@@ -131,12 +126,12 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
     }
 
     public Activity getActivity() {
-        return cm.getActivity();
+        return manager.getActivity();
     }
 
     public SimpleFragment getParentFragment() {
-        SimpleFragmentKey parentKey = cm.getParentKey();
-        return parentKey == null ? null : fm.find(parentKey.getParent());
+        SimpleFragmentKey parentKey = manager.getParentKey();
+        return parentKey == null ? null : stateManager.find(parentKey.getParent());
     }
 
     /**
@@ -144,7 +139,7 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
      * Activity.
      */
     public Object getParent() {
-        SimpleFragmentKey parentKey = cm.getParentKey();
+        SimpleFragmentKey parentKey = manager.getParentKey();
         if (parentKey == null) {
             return getActivity();
         } else {
@@ -157,7 +152,7 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
      * the inflater.
      */
     public LayoutInflater getLayoutInflater() {
-        return LayoutInflater.from(fm.getActivity());
+        return LayoutInflater.from(stateManager.getActivity());
     }
 
     State getState() {
@@ -191,7 +186,7 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
         private SimpleFragmentIntent<?> intent;
         private Bundle state;
         private SimpleFragmentKey key;
-        private Parcelable cmState;
+        private Parcelable managerState;
 
         State() {
         }
@@ -206,14 +201,14 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
             dest.writeParcelable(this.intent, 0);
             dest.writeBundle(state);
             dest.writeParcelable(key, flags);
-            dest.writeParcelable(cmState, flags);
+            dest.writeParcelable(managerState, flags);
         }
 
         State(Parcel in) {
             this.intent = in.readParcelable(getClass().getClassLoader());
             this.state = in.readBundle();
             this.key = in.readParcelable(getClass().getClassLoader());
-            this.cmState = in.readParcelable(getClass().getClassLoader());
+            this.managerState = in.readParcelable(getClass().getClassLoader());
         }
 
         public static final Parcelable.Creator<State> CREATOR = new Parcelable.Creator<State>() {

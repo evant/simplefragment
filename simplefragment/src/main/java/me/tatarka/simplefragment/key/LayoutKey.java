@@ -8,8 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import me.tatarka.simplefragment.SimpleFragment;
-import me.tatarka.simplefragment.SimpleFragmentContainer;
 import me.tatarka.simplefragment.SimpleFragmentManager;
+import me.tatarka.simplefragment.SimpleFragmentStateManager;
 import me.tatarka.simplefragment.util.ResUtil;
 
 /**
@@ -50,25 +50,25 @@ public class LayoutKey implements SimpleFragmentContainerKey {
     }
 
     @Override
-    public void attach(SimpleFragmentContainer container, View rootView, SimpleFragment fragment) {
-        SimpleFragmentManager fm = container.getSimpleFragmentManager();
+    public void attach(SimpleFragmentManager container, View rootView, SimpleFragment fragment) {
+        SimpleFragmentStateManager stateManager = container.getStateManager();
         View parentView = rootView.findViewById(viewId);
         if (parentView == null) {
-            throw new IllegalArgumentException("Cannot find view with id '" + ResUtil.safeGetIdName(fm.getActivity().getResources(), viewId) + "'.");
+            throw new IllegalArgumentException("Cannot find view with id '" + ResUtil.safeGetIdName(stateManager.getActivity().getResources(), viewId) + "'.");
         }
         if (!(parentView instanceof ViewGroup)) {
-            throw new IllegalArgumentException("View with id '" + ResUtil.safeGetIdName(fm.getActivity().getResources(), viewId) + "' is not an instance of ViewGroup.");
+            throw new IllegalArgumentException("View with id '" + ResUtil.safeGetIdName(stateManager.getActivity().getResources(), viewId) + "' is not an instance of ViewGroup.");
         }
         ViewGroup parent = (ViewGroup) parentView;
-        View view = fm.createView(fragment, fragment.getLayoutInflater(), parent);
+        View view = stateManager.createView(fragment, fragment.getLayoutInflater(), parent);
         parent.addView(view);
     }
 
     @Override
-    public void detach(SimpleFragmentContainer container, View rootView, SimpleFragment fragment) {
-        SimpleFragmentManager fm = container.getSimpleFragmentManager();
+    public void detach(SimpleFragmentManager container, View rootView, SimpleFragment fragment) {
+        SimpleFragmentStateManager stateManager = container.getStateManager();
         ViewGroup parentView = (ViewGroup) rootView.findViewById(viewId);
-        View view = fm.destroyView(fragment);
+        View view = stateManager.destroyView(fragment);
         parentView.removeView(view);
     }
 

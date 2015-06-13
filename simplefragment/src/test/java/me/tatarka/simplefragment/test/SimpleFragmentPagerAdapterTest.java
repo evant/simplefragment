@@ -16,9 +16,9 @@ import org.mockito.MockitoAnnotations;
 import java.util.ArrayList;
 import java.util.List;
 
-import me.tatarka.simplefragment.SimpleFragmentContainer;
-import me.tatarka.simplefragment.SimpleFragmentIntent;
 import me.tatarka.simplefragment.SimpleFragmentManager;
+import me.tatarka.simplefragment.SimpleFragmentIntent;
+import me.tatarka.simplefragment.SimpleFragmentStateManager;
 import me.tatarka.simplefragment.widget.SimpleFragmentPagerAdapter;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,8 +48,8 @@ public class SimpleFragmentPagerAdapterTest {
 
     @Test
     public void createFragmentPage() {
-        SimpleFragmentManager manager = new SimpleFragmentManager(activity);
-        SimpleFragmentContainer container = new SimpleFragmentContainer(manager, null);
+        SimpleFragmentStateManager manager = new SimpleFragmentStateManager(activity);
+        SimpleFragmentManager container = new SimpleFragmentManager(manager, null);
         SimpleFragmentPagerAdapter adapter = new SimpleFragmentPagerAdapter(container) {
             @Override
             public SimpleFragmentIntent<?> getItem(int position) {
@@ -69,8 +69,8 @@ public class SimpleFragmentPagerAdapterTest {
 
     @Test
     public void recreateFragmentPageOnConfigurationChange() {
-        SimpleFragmentManager manager = new SimpleFragmentManager(activity);
-        SimpleFragmentContainer container = new SimpleFragmentContainer(manager, null);
+        SimpleFragmentStateManager manager = new SimpleFragmentStateManager(activity);
+        SimpleFragmentManager container = new SimpleFragmentManager(manager, null);
         PagerAdapter adapter = new SimpleFragmentPagerAdapter(container) {
             @Override
             public SimpleFragmentIntent<?> getItem(int position) {
@@ -107,8 +107,8 @@ public class SimpleFragmentPagerAdapterTest {
 
     @Test
     public void destroyFragmentWhenNotifyRemoved() {
-        final SimpleFragmentManager manager = new SimpleFragmentManager(activity);
-        SimpleFragmentContainer container = new SimpleFragmentContainer(manager, null);
+        final SimpleFragmentStateManager manager = new SimpleFragmentStateManager(activity);
+        SimpleFragmentManager container = new SimpleFragmentManager(manager, null);
         final List<SimpleFragmentIntent> fragments = new ArrayList<>();
         fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class));
         PagerAdapter adapter = new SimpleFragmentPagerAdapter(container) {
@@ -132,8 +132,8 @@ public class SimpleFragmentPagerAdapterTest {
 
     @Test
     public void addNewFragmentOnNotifyAdd() {
-        final SimpleFragmentManager manager = new SimpleFragmentManager(activity);
-        SimpleFragmentContainer container = new SimpleFragmentContainer(manager, null);
+        final SimpleFragmentStateManager manager = new SimpleFragmentStateManager(activity);
+        SimpleFragmentManager container = new SimpleFragmentManager(manager, null);
         final List<SimpleFragmentIntent> fragments = new ArrayList<>();
         fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 1));
         SimpleFragmentPagerAdapter adapter = new SimpleFragmentPagerAdapter(container) {
@@ -159,8 +159,8 @@ public class SimpleFragmentPagerAdapterTest {
 
     @Test
     public void tracksChangingPositionsOfFragmentIntents() {
-        final SimpleFragmentManager manager = new SimpleFragmentManager(activity);
-        SimpleFragmentContainer container = new SimpleFragmentContainer(manager, null);
+        final SimpleFragmentStateManager manager = new SimpleFragmentStateManager(activity);
+        SimpleFragmentManager container = new SimpleFragmentManager(manager, null);
         final List<SimpleFragmentIntent> fragments = new ArrayList<>();
         fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 1));
         fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 2));
@@ -187,8 +187,8 @@ public class SimpleFragmentPagerAdapterTest {
 
     @Test
     public void moveAndReplaceFragmentAtPosition() {
-        final SimpleFragmentManager manager = new SimpleFragmentManager(activity);
-        SimpleFragmentContainer container = new SimpleFragmentContainer(manager, null);
+        final SimpleFragmentStateManager manager = new SimpleFragmentStateManager(activity);
+        SimpleFragmentManager container = new SimpleFragmentManager(manager, null);
         final List<SimpleFragmentIntent> fragments = new ArrayList<>();
         fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 1));
         fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 2));

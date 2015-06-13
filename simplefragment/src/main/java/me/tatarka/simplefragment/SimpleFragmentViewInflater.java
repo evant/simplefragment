@@ -20,13 +20,13 @@ public class SimpleFragmentViewInflater implements LayoutInflaterFactory {
     };
     private static final int ATTR_NAME = 0;
 
-    private SimpleFragmentContainer container;
+    private SimpleFragmentManager container;
 
-    public SimpleFragmentViewInflater(SimpleFragmentContainerProvider provider) {
-        this(provider.getSimpleFragmentContainer());
+    public SimpleFragmentViewInflater(SimpleFragmentManagerProvider provider) {
+        this(provider.getSimpleFragmentManager());
     }
 
-    public SimpleFragmentViewInflater(SimpleFragmentContainer container) {
+    public SimpleFragmentViewInflater(SimpleFragmentManager container) {
         this.container = container;
     }
 
