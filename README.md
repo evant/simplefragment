@@ -50,7 +50,7 @@ public class HelloWorldFragment extends SimpleFragment {
 }
 ```
 
-In order to use SimpleFragments in an Activity you should subclass `SimpleFragmentActivity` or `SimpleFragmentActionBarActivity`. You can then either add the SimpleFragment in the layout
+In order to use SimpleFragments in an Activity you should subclass `SimpleFragmentActivity` or `SimpleFragmentAppCompatActivity`. You can then either add the SimpleFragment in the layout
 ```xml
 <fragment
     android:id="@+id/my_fragment"
@@ -67,7 +67,7 @@ public class MyActivity extends SimpleFragmentActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    getSimpleFragmentContainer().findOrAdd(SimpleFragmentIntent.of(HelloWorldFragment.class), LayoutKey.of(R.id.my_fragment));
+    getSimpleFragmentManager().findOrAdd(SimpleFragmentIntent.of(HelloWorldFragment.class), LayoutKey.of(R.id.my_fragment));
   }
 }
 ```
