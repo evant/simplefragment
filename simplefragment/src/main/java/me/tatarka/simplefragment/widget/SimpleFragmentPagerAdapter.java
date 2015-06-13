@@ -13,36 +13,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 import me.tatarka.simplefragment.SimpleFragment;
+import me.tatarka.simplefragment.SimpleFragmentContainer;
+import me.tatarka.simplefragment.SimpleFragmentContainerProvider;
 import me.tatarka.simplefragment.SimpleFragmentIntent;
 import me.tatarka.simplefragment.SimpleFragmentManager;
-import me.tatarka.simplefragment.SimpleFragmentManagerProvider;
 import me.tatarka.simplefragment.key.SimpleFragmentKey;
 import me.tatarka.simplefragment.key.UuidKey;
 
 /**
- * Created by evan on 3/7/15.
+ * A {@link PagerAdapter} that supports SimpleFragments. Unlike {@link
+ * android.support.v4.app.FragmentPagerAdapter}, you don't have to worry about state not being saved
+ * or it not updating correctly when you call {@link #notifyDataSetChanged()}.
  */
 public abstract class SimpleFragmentPagerAdapter extends PagerAdapter {
+    private SimpleFragmentKey parentKey;
     private SimpleFragmentManager fm;
     private LayoutInflater layoutInflater;
     private List<SimpleFragmentIntent> fragmentIntents;
     private SparseArray<SimpleFragmentKey> fragmentKeys;
 
-    public SimpleFragmentPagerAdapter(SimpleFragmentManagerProvider provider) {
-        this(provider.getSimpleFragmentManager());
+    public SimpleFragmentPagerAdapter(SimpleFragmentContainerProvider provider) {
+        this(provider.getSimpleFragmentContainer());
     }
 
-    public SimpleFragmentPagerAdapter(SimpleFragmentManagerProvider provider, LayoutInflater layoutInflater) {
-        this(provider.getSimpleFragmentManager(), layoutInflater);
-    }
-
-    public SimpleFragmentPagerAdapter(SimpleFragmentManager fm) {
-        this(fm, LayoutInflater.from(fm.getContext()));
-    }
-
-    public SimpleFragmentPagerAdapter(SimpleFragmentManager fm, LayoutInflater layoutInflater) {
-        this.fm = fm;
-        this.layoutInflater = layoutInflater;
+    public SimpleFragmentPagerAdapter(SimpleFragmentContainer cm) {
+        this.parentKey = cm.getParentKey();
+        this.fm = cm.getSimpleFragmentManager();
+        this.layoutInflater = fm.getActivity().getLayoutInflater();
         this.fragmentKeys = new SparseArray<>();
         this.fragmentIntents = new ArrayList<>();
     }
@@ -55,7 +52,7 @@ public abstract class SimpleFragmentPagerAdapter extends PagerAdapter {
             if (intent == null) {
                 throw new NullPointerException("getItem() returned null.");
             }
-            SimpleFragmentKey key = UuidKey.create();
+            SimpleFragmentKey key = UuidKey.create(parentKey);
             fragment = fm.create(intent, key);
         }
         View view = fm.createView(fragment, layoutInflater, container);

@@ -16,8 +16,6 @@ import me.tatarka.simplefragment.SimpleDialogFragment;
  * Created by evan on 3/22/15.
  */
 public class SimpleFragmentDialog extends SimpleDialogFragment {
-    private OnAlertButtonClickedListener listener;
-
     @Override
     public void onCreate(Context context, @Nullable Bundle state) {
         super.onCreate(context, state);
@@ -35,24 +33,25 @@ public class SimpleFragmentDialog extends SimpleDialogFragment {
                 .setPositiveButton("ok", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        if (listener != null) {
-                            listener.onOkClicked();
-                        }
+                        getListener().onOkClicked();
                     }
                 })
                 .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        if (listener != null) {
-                            listener.onCancelClicked();
-                        }
+                        getListener().onCancelClicked();
                     }
                 })
                 .create();
     }
 
-    public void setOnAlertButtonClickedListener(OnAlertButtonClickedListener listener) {
-        this.listener = listener;
+    private OnAlertButtonClickedListener getListener() {
+        Object parent = getParent();
+        if (parent instanceof SimpleFragmentChildWithBackStack.OnBackStackRequestListener) {
+            return (OnAlertButtonClickedListener) parent;
+        } else {
+            return EMPTY_LISTENER;
+        }
     }
 
     public interface OnAlertButtonClickedListener {
@@ -60,4 +59,16 @@ public class SimpleFragmentDialog extends SimpleDialogFragment {
 
         void onCancelClicked();
     }
+
+    private static final OnAlertButtonClickedListener EMPTY_LISTENER = new OnAlertButtonClickedListener() {
+        @Override
+        public void onOkClicked() {
+
+        }
+
+        @Override
+        public void onCancelClicked() {
+
+        }
+    };
 }

@@ -18,8 +18,8 @@ import static me.tatarka.simplefragment.sample.SimpleFragmentChildWithBackStack.
 /**
  * Created by evan on 2/2/15.
  */
-public class SimpleFragmentWithBackStack extends SimpleFragment {
-    
+public class SimpleFragmentWithBackStack extends SimpleFragment implements SimpleFragmentChildWithBackStack.OnBackStackRequestListener {
+
     @Override
     public void onCreate(Context context, @Nullable Bundle state) {
         final SimpleFragmentContainer container = getSimpleFragmentContainer();
@@ -30,32 +30,23 @@ public class SimpleFragmentWithBackStack extends SimpleFragment {
         container.findOrAdd(
                 SimpleFragmentIntent.of(SimpleFragmentChildWithBackStack.class)
                         .putExtra(ARG_VIEW_ID, R.id.child_fragment2), LayoutKey.of(R.id.child_fragment2));
-
-        final SimpleFragmentChildWithBackStack.OnRemoveListener removeListener = new SimpleFragmentChildWithBackStack.OnRemoveListener() {
-            @Override
-            public void onRemove(SimpleFragmentChildWithBackStack fragment) {
-                container.remove(fragment);
-            }
-        };
-
-        final SimpleFragmentChildWithBackStack.OnAddListener addListener = new SimpleFragmentChildWithBackStack.OnAddListener() {
-            @Override
-            public void onAdd(int viewId, int stackCount) {
-                SimpleFragmentChildWithBackStack newFragment = container.push(
-                        SimpleFragmentIntent.of(SimpleFragmentChildWithBackStack.class)
-                                .putExtra(ARG_STACK_COUNT, stackCount + 1)
-                                .putExtra(ARG_VIEW_ID, viewId), LayoutKey.of(viewId));
-                newFragment.setListeners(this, removeListener);
-            }
-        };
-
-        for (SimpleFragment fragment : container.getFragments()) {
-            ((SimpleFragmentChildWithBackStack) fragment).setListeners(addListener, removeListener);
-        }
     }
 
     @Override
     public View onCreateView(final LayoutInflater inflater, final ViewGroup parent) {
         return inflater.inflate(R.layout.fragment_with_backstack, parent, false);
+    }
+
+    @Override
+    public void onAdd(int viewId, int stackCount) {
+        getSimpleFragmentContainer().push(
+                SimpleFragmentIntent.of(SimpleFragmentChildWithBackStack.class)
+                        .putExtra(ARG_STACK_COUNT, stackCount + 1)
+                        .putExtra(ARG_VIEW_ID, viewId), LayoutKey.of(viewId));
+    }
+
+    @Override
+    public void onRemove(SimpleFragmentChildWithBackStack fragment) {
+        getSimpleFragmentContainer().remove(fragment);
     }
 }

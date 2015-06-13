@@ -1,6 +1,7 @@
 package me.tatarka.simplefragment.test;
 
 import android.os.Parcel;
+import android.support.annotation.Nullable;
 
 import me.tatarka.simplefragment.key.SimpleFragmentKey;
 
@@ -43,4 +44,10 @@ public class TestKey implements SimpleFragmentKey, android.os.Parcelable {
             return new TestKey[size];
         }
     };
+
+    @Nullable
+    @Override
+    public SimpleFragmentKey getParent() {
+        return null;
+    }
 }

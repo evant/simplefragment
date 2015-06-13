@@ -21,13 +21,6 @@ public class SimpleFragmentChildWithBackStack extends SimpleFragment {
 
     private int stackCount;
     private int viewId;
-    private OnAddListener addListener;
-    private OnRemoveListener removeListener;
-
-    public void setListeners(OnAddListener addListener, OnRemoveListener removeListener) {
-        this.addListener = addListener;
-        this.removeListener = removeListener;
-    }
 
     @Override
     public void onCreate(Context context, @Nullable Bundle state) {
@@ -49,9 +42,7 @@ public class SimpleFragmentChildWithBackStack extends SimpleFragment {
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (addListener != null) {
-                    addListener.onAdd(viewId, stackCount);
-                }
+                getListener().onAdd(viewId, stackCount);
             }
         });
 
@@ -59,18 +50,37 @@ public class SimpleFragmentChildWithBackStack extends SimpleFragment {
         removeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (stackCount > 0 && removeListener != null) {
-                    removeListener.onRemove(SimpleFragmentChildWithBackStack.this);
+                if (stackCount > 0) {
+                    getListener().onRemove(SimpleFragmentChildWithBackStack.this);
                 }
             }
         });
     }
 
-    public interface OnAddListener {
-        void onAdd(int viewId, int stackCount);
+    private OnBackStackRequestListener getListener() {
+        Object parent = getParent();
+        if (parent instanceof OnBackStackRequestListener) {
+            return (OnBackStackRequestListener) parent;
+        } else {
+            return EMPTY_LISTENER;
+        }
     }
 
-    public interface OnRemoveListener {
+    public interface OnBackStackRequestListener {
+        void onAdd(int viewId, int stackCount);
+
         void onRemove(SimpleFragmentChildWithBackStack fragment);
     }
+
+    private static final OnBackStackRequestListener EMPTY_LISTENER = new OnBackStackRequestListener() {
+        @Override
+        public void onAdd(int viewId, int stackCount) {
+
+        }
+
+        @Override
+        public void onRemove(SimpleFragmentChildWithBackStack fragment) {
+
+        }
+    };
 }

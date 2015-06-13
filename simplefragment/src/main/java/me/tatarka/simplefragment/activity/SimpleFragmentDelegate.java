@@ -43,27 +43,27 @@ public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, Si
     }
 
     public void onCreate(Bundle savedInstanceState) {
-        Context context = activity;
+        Activity activity = this.activity;
 
         if (savedInstanceState == null) {
-            fm = new SimpleFragmentManager(context);
+            fm = new SimpleFragmentManager(activity);
             cm = new SimpleFragmentContainer(fm, null);
         } else {
             Object lastNonConfigInstance;
-            if (activity instanceof FragmentActivity) {
-                lastNonConfigInstance = ((FragmentActivity) activity).getLastCustomNonConfigurationInstance();
+            if (this.activity instanceof FragmentActivity) {
+                lastNonConfigInstance = ((FragmentActivity) this.activity).getLastCustomNonConfigurationInstance();
             } else {
-                lastNonConfigInstance = activity.getLastNonConfigurationInstance();
+                lastNonConfigInstance = this.activity.getLastNonConfigurationInstance();
             }
 
             if (lastNonConfigInstance != null) {
                 NonConfigInstance instance = (NonConfigInstance) lastNonConfigInstance;
                 fm = instance.fm;
-                fm.restoreConfigurationState(context);
+                fm.restoreConfigurationState(activity);
                 cm = instance.cm;
             } else {
                 State state = savedInstanceState.getParcelable(STATE);
-                fm = new SimpleFragmentManager(context);
+                fm = new SimpleFragmentManager(activity);
                 cm = new SimpleFragmentContainer(fm, null);
                 fm.restoreState(state.fmState);
                 cm.restoreState(state.cmState);

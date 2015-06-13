@@ -1,6 +1,6 @@
 package me.tatarka.simplefragment.test;
 
-import android.content.Context;
+import android.app.Activity;
 import android.os.Parcelable;
 import android.view.ViewGroup;
 
@@ -25,9 +25,9 @@ import static org.mockito.Mockito.when;
 @RunWith(CustomRobolectricRunner.class) // Robolectric needed to not crash on Bundle usage.
 public class SimpleFragmentContainerTest {
     private static final LayoutKey KEY = LayoutKey.of(0);
-    
+
     @Mock
-    Context context;
+    Activity activity;
     @Mock
     ViewGroup rootView;
 
@@ -39,7 +39,7 @@ public class SimpleFragmentContainerTest {
 
     @Test
     public void testAddAfterSetRootView() {
-        SimpleFragmentManager fm = new SimpleFragmentManager(context);
+        SimpleFragmentManager fm = new SimpleFragmentManager(activity);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
         TestSimpleFragment fragment = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
@@ -49,7 +49,7 @@ public class SimpleFragmentContainerTest {
 
     @Test
     public void testAddBeforeSetRootView() {
-        SimpleFragmentManager fm = new SimpleFragmentManager(context);
+        SimpleFragmentManager fm = new SimpleFragmentManager(activity);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         TestSimpleFragment fragment = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         cm.setView(rootView);
@@ -59,14 +59,14 @@ public class SimpleFragmentContainerTest {
 
     @Test
     public void testAddConfigurationChange() {
-        SimpleFragmentManager fm = new SimpleFragmentManager(context);
+        SimpleFragmentManager fm = new SimpleFragmentManager(activity);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
         TestSimpleFragment fragment = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         cm.clearView();
         fm.clearConfigurationState();
         fragment.wasOnCreateViewCalled = false;
-        fm.restoreConfigurationState(context);
+        fm.restoreConfigurationState(activity);
         cm.setView(rootView);
 
         assertThat(fragment.wasOnCreateViewCalled).isTrue();
@@ -74,13 +74,13 @@ public class SimpleFragmentContainerTest {
 
     @Test
     public void testAddSaveState() {
-        SimpleFragmentManager fm = new SimpleFragmentManager(context);
+        SimpleFragmentManager fm = new SimpleFragmentManager(activity);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
         TestSimpleFragment fragment = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         Parcelable fmState = fm.saveState();
         Parcelable cmState = cm.saveState();
-        fm = new SimpleFragmentManager(context);
+        fm = new SimpleFragmentManager(activity);
         cm = new SimpleFragmentContainer(fm, null);
         fm.restoreState(fmState);
         cm.restoreState(cmState);
@@ -90,7 +90,7 @@ public class SimpleFragmentContainerTest {
 
     @Test
     public void testRemove() {
-        SimpleFragmentManager fm = new SimpleFragmentManager(context);
+        SimpleFragmentManager fm = new SimpleFragmentManager(activity);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
         TestSimpleFragment fragment = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
@@ -101,7 +101,7 @@ public class SimpleFragmentContainerTest {
 
     @Test
     public void testPush() {
-        SimpleFragmentManager fm = new SimpleFragmentManager(context);
+        SimpleFragmentManager fm = new SimpleFragmentManager(activity);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
         TestSimpleFragment fragment1 = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
@@ -112,14 +112,14 @@ public class SimpleFragmentContainerTest {
 
     @Test
     public void testPushConfigurationChange() {
-        SimpleFragmentManager fm = new SimpleFragmentManager(context);
+        SimpleFragmentManager fm = new SimpleFragmentManager(activity);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
         TestSimpleFragment fragment1 = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         TestSimpleFragment fragment2 = cm.push(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         cm.clearView();
         fm.clearConfigurationState();
-        fm.restoreConfigurationState(context);
+        fm.restoreConfigurationState(activity);
         cm.setView(rootView);
 
         assertThat(cm.find(KEY)).isSameAs(fragment2);
@@ -127,19 +127,19 @@ public class SimpleFragmentContainerTest {
 
     @Test
     public void testPushAfterConfigurationChange() {
-        SimpleFragmentManager fm = new SimpleFragmentManager(context);
+        SimpleFragmentManager fm = new SimpleFragmentManager(activity);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
         TestSimpleFragment fragment1 = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         cm.clearView();
         ;
         fm.clearConfigurationState();
-        fm.restoreConfigurationState(context);
+        fm.restoreConfigurationState(activity);
         cm.setView(rootView);
         TestSimpleFragment fragment2 = cm.push(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         cm.clearView();
         fm.clearConfigurationState();
-        fm.restoreConfigurationState(context);
+        fm.restoreConfigurationState(activity);
         cm.setView(rootView);
 
         assertThat(cm.find(KEY)).isSameAs(fragment2);
@@ -147,7 +147,7 @@ public class SimpleFragmentContainerTest {
 
     @Test
     public void testPushSaveState() {
-        SimpleFragmentManager fm = new SimpleFragmentManager(context);
+        SimpleFragmentManager fm = new SimpleFragmentManager(activity);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
         TestSimpleFragment fragment1 = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
@@ -156,7 +156,7 @@ public class SimpleFragmentContainerTest {
         Parcelable cmState = cm.saveState();
         fm.clearConfigurationState();
         cm.clearView();
-        fm = new SimpleFragmentManager(context);
+        fm = new SimpleFragmentManager(activity);
         fm.restoreState(fmState);
         cm = new SimpleFragmentContainer(fm, null);
         cm.restoreState(cmState);
@@ -167,7 +167,7 @@ public class SimpleFragmentContainerTest {
 
     @Test
     public void testPop() {
-        SimpleFragmentManager fm = new SimpleFragmentManager(context);
+        SimpleFragmentManager fm = new SimpleFragmentManager(activity);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
         TestSimpleFragment fragment1 = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
@@ -179,14 +179,14 @@ public class SimpleFragmentContainerTest {
 
     @Test
     public void testPopConfigurationChange() {
-        SimpleFragmentManager fm = new SimpleFragmentManager(context);
+        SimpleFragmentManager fm = new SimpleFragmentManager(activity);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
         TestSimpleFragment fragment1 = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         TestSimpleFragment fragment2 = cm.push(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
         cm.clearView();
         fm.clearConfigurationState();
-        fm.restoreConfigurationState(context);
+        fm.restoreConfigurationState(activity);
         cm.setView(rootView);
         cm.pop();
 
@@ -195,7 +195,7 @@ public class SimpleFragmentContainerTest {
 
     @Test
     public void testPopSaveState() {
-        SimpleFragmentManager fm = new SimpleFragmentManager(context);
+        SimpleFragmentManager fm = new SimpleFragmentManager(activity);
         SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
         cm.setView(rootView);
         TestSimpleFragment fragment1 = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
@@ -204,7 +204,7 @@ public class SimpleFragmentContainerTest {
         Parcelable cmState = cm.saveState();
         fm.clearConfigurationState();
         cm.clearView();
-        fm = new SimpleFragmentManager(context);
+        fm = new SimpleFragmentManager(activity);
         fm.restoreState(fmState);
         cm = new SimpleFragmentContainer(fm, null);
         cm.restoreState(cmState);
@@ -212,5 +212,24 @@ public class SimpleFragmentContainerTest {
         cm.pop();
 
         assertThat(cm.find(KEY)).isEqualTo(fragment1);
+    }
+
+    @Test
+    public void testGetActivity() {
+        SimpleFragmentManager fm = new SimpleFragmentManager(activity);
+        SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
+        cm.setView(rootView);
+        TestSimpleFragment fragment = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
+        assertThat(fragment.getActivity()).isSameAs(activity);
+    }
+
+    @Test
+    public void testParentFragment() {
+        SimpleFragmentManager fm = new SimpleFragmentManager(activity);
+        SimpleFragmentContainer cm = new SimpleFragmentContainer(fm, null);
+        cm.setView(rootView);
+        TestSimpleFragment fragment = cm.add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
+        TestSimpleFragment nestedFragment = fragment.getSimpleFragmentContainer().add(SimpleFragmentIntent.of(TestSimpleFragment.class), KEY);
+        assertThat(nestedFragment.getParentFragment()).isSameAs(fragment);
     }
 }

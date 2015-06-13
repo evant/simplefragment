@@ -15,8 +15,6 @@ public interface SimpleFragmentContainerKey extends SimpleFragmentKey {
 
     void detach(SimpleFragmentContainer container, View rootView, SimpleFragment fragment);
 
-    SimpleFragmentKey getParent();
-
     SimpleFragmentContainerKey withParent(SimpleFragmentKey parent);
 
     boolean matches(@Nullable SimpleFragmentContainerKey other);

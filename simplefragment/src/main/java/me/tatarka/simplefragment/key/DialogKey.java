@@ -38,7 +38,7 @@ public class DialogKey implements SimpleFragmentContainerKey {
         if (!(fragment instanceof SimpleDialogFragment)) {
             throw new IllegalStateException(fragment + " is not a SimpleDialogFragment");
         }
-        SimpleFragmentManager fm = container.getFragmentManager();
+        SimpleFragmentManager fm = container.getSimpleFragmentManager();
         fm.createView(fragment, LayoutInflater.from(rootView.getContext()), null);
         Dialog dialog = ((SimpleDialogFragment) fragment).getDialog();
         if (dialog != null) {
@@ -53,7 +53,7 @@ public class DialogKey implements SimpleFragmentContainerKey {
 
     @Override
     public void detach(SimpleFragmentContainer container, View rootView, SimpleFragment fragment) {
-        SimpleFragmentManager fm = container.getFragmentManager();
+        SimpleFragmentManager fm = container.getSimpleFragmentManager();
         fm.destroyView(fragment);
     }
 

@@ -1,5 +1,6 @@
 package me.tatarka.simplefragment;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -11,9 +12,7 @@ import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import me.tatarka.simplefragment.backstack.SimpleFragmentBackStack;
 import me.tatarka.simplefragment.key.LayoutKey;
@@ -26,24 +25,24 @@ import me.tatarka.simplefragment.key.SimpleFragmentKey;
  * paging between them in a ViewPager.
  */
 public class SimpleFragmentManager {
-    private Context context;
+    private Activity activity;
     private List<SimpleFragment> fragments;
     private SimpleFragmentBackStack backStack;
 
-    public SimpleFragmentManager(Context context) {
-        this.context = context;
+    public SimpleFragmentManager(Activity activity) {
+        this.activity = activity;
         this.fragments = new ArrayList<>();
         this.backStack = new SimpleFragmentBackStack(this);
     }
 
-    public Context getContext() {
-        return context;
+    public Activity getActivity() {
+        return activity;
     }
 
     public List<SimpleFragment> getFragments() {
         return Collections.unmodifiableList(fragments);
     }
-    
+
     public SimpleFragmentBackStack getBackStack() {
         return backStack;
     }
@@ -77,7 +76,7 @@ public class SimpleFragmentManager {
             // Special case for better error reporting of layout id's
             String keyName;
             if (key instanceof LayoutKey) {
-                keyName = ((LayoutKey) key).toString(getContext().getResources());
+                keyName = ((LayoutKey) key).toString(activity.getResources());
             } else {
                 keyName = key.toString();
             }
@@ -156,7 +155,7 @@ public class SimpleFragmentManager {
         }
 
         // To support <fragment> tags in nested layouts, we need a custom inflater.
-        LayoutInflater fragmentInflater = layoutInflater.cloneInContext(context);
+        LayoutInflater fragmentInflater = layoutInflater.cloneInContext(activity);
         LayoutInflaterCompat.setFactory(fragmentInflater, new SimpleFragmentViewInflater(fragment.getSimpleFragmentContainer()));
 
         return fragment.createView(fragmentInflater, parentView);
@@ -192,7 +191,7 @@ public class SimpleFragmentManager {
     public void restoreState(Parcelable parcelable) {
         State state = (State) parcelable;
         backStack.restoreState(state.backStackState);
-        
+
         // We need to loop twice, once to add all the fragments to the manager, and once to restore
         // their states. This is so fragments will always see their children as existing.
         fragments = new ArrayList<>(state.fragmentStates.length);
@@ -211,7 +210,7 @@ public class SimpleFragmentManager {
     /**
      * Clears any references to state that will change on a configuration change and detaches all
      * fragments. This <em>must</em> be called when retaining the manager on a configuration change.
-     * You can restore this cleared state with {@link #restoreConfigurationState(Context)}.
+     * You can restore this cleared state with {@link #restoreConfigurationState(Activity)}.
      */
     public void clearConfigurationState() {
         for (SimpleFragment fragment : fragments) {
@@ -219,17 +218,17 @@ public class SimpleFragmentManager {
                 destroyView(fragment);
             }
         }
-        context = null;
+        activity = null;
     }
 
     /**
      * Restores references to configuration state and restores all fragments that were detaches with
      * {@link #clearConfigurationState()}.
      *
-     * @param context the context to restore to.
+     * @param activity the activity to restore to.
      */
-    public void restoreConfigurationState(Context context) {
-        this.context = context;
+    public void restoreConfigurationState(Activity activity) {
+        this.activity = activity;
     }
 
     private static class State implements Parcelable {

@@ -1,5 +1,6 @@
 package me.tatarka.simplefragment;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Parcel;
@@ -46,7 +47,7 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
         this.cm = new SimpleFragmentContainer(fm, key);
         state.intent = intent;
         state.key = key;
-        onCreate(fm.getContext().getApplicationContext(), this.state.state);
+        onCreate(fm.getActivity().getApplicationContext(), this.state.state);
     }
 
     final View createView(LayoutInflater inflater, ViewGroup parent) {
@@ -78,7 +79,7 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
         this.fm = fm;
         this.cm = new SimpleFragmentContainer(fm, state.key);
         this.cm.restoreState(state.cmState);
-        this.onCreate(fm.getContext().getApplicationContext(), state.state);
+        this.onCreate(fm.getActivity().getApplicationContext(), state.state);
     }
 
     static SimpleFragment newInstance(Parcelable parcelable) {
@@ -129,12 +130,34 @@ public abstract class SimpleFragment implements SimpleFragmentManagerProvider, S
         return state.intent;
     }
 
+    public Activity getActivity() {
+        return cm.getActivity();
+    }
+
+    public SimpleFragment getParentFragment() {
+        SimpleFragmentKey parentKey = cm.getParentKey();
+        return parentKey == null ? null : fm.find(parentKey.getParent());
+    }
+
+    /**
+     * Returns the direct parent of this SimpleFragment, it will either be a SimpleFragment or the
+     * Activity.
+     */
+    public Object getParent() {
+        SimpleFragmentKey parentKey = cm.getParentKey();
+        if (parentKey == null) {
+            return getActivity();
+        } else {
+            return getParentFragment();
+        }
+    }
+
     /**
      * Returns the layoutInflater for the given SimpleFragment, you may override this to customize
      * the inflater.
      */
     public LayoutInflater getLayoutInflater() {
-        return LayoutInflater.from(fm.getContext());
+        return LayoutInflater.from(fm.getActivity());
     }
 
     State getState() {

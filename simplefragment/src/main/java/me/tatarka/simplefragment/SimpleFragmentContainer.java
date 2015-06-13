@@ -1,6 +1,6 @@
 package me.tatarka.simplefragment;
 
-import android.content.Context;
+import android.app.Activity;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
@@ -21,7 +21,7 @@ import me.tatarka.simplefragment.key.SimpleFragmentKey;
  * A container where you can directly add and remove fragments to the view hierarchy. It also
  * supports back stack-like features.
  */
-public class SimpleFragmentContainer {
+public class SimpleFragmentContainer implements SimpleFragmentManagerProvider {
     private SimpleFragmentManager fm;
     private SimpleFragmentKey parentKey;
     private View rootView;
@@ -36,7 +36,8 @@ public class SimpleFragmentContainer {
         this.backStack.addListener(parentKey, new BackStackListener());
     }
 
-    public SimpleFragmentManager getFragmentManager() {
+    @Override
+    public SimpleFragmentManager getSimpleFragmentManager() {
         return fm;
     }
 
@@ -146,7 +147,7 @@ public class SimpleFragmentContainer {
         List<SimpleFragment> fragments = new ArrayList<>();
         for (SimpleFragment fragment : fm.getFragments()) {
             SimpleFragmentKey key = fragment.getKey();
-            if (key instanceof SimpleFragmentContainerKey && equals(((SimpleFragmentContainerKey) key).getParent(), parentKey)) {
+            if (key instanceof SimpleFragmentContainerKey && equals(key.getParent(), parentKey)) {
                 fragments.add(fragment);
             }
         }
@@ -226,8 +227,8 @@ public class SimpleFragmentContainer {
         ((SimpleFragmentContainerKey) fragment.getKey()).attach(this, rootView, fragment);
     }
 
-    public Context getContext() {
-        return fm.getContext();
+    public Activity getActivity() {
+        return fm.getActivity();
     }
 
     private class BackStackListener implements SimpleFragmentBackStack.BackStackListener {

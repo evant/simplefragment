@@ -51,13 +51,13 @@ public class LayoutKey implements SimpleFragmentContainerKey {
 
     @Override
     public void attach(SimpleFragmentContainer container, View rootView, SimpleFragment fragment) {
-        SimpleFragmentManager fm = container.getFragmentManager();
+        SimpleFragmentManager fm = container.getSimpleFragmentManager();
         View parentView = rootView.findViewById(viewId);
         if (parentView == null) {
-            throw new IllegalArgumentException("Cannot find view with id '" + ResUtil.safeGetIdName(fm.getContext().getResources(), viewId) + "'.");
+            throw new IllegalArgumentException("Cannot find view with id '" + ResUtil.safeGetIdName(fm.getActivity().getResources(), viewId) + "'.");
         }
         if (!(parentView instanceof ViewGroup)) {
-            throw new IllegalArgumentException("View with id '" + ResUtil.safeGetIdName(fm.getContext().getResources(), viewId) + "' is not an instance of ViewGroup.");
+            throw new IllegalArgumentException("View with id '" + ResUtil.safeGetIdName(fm.getActivity().getResources(), viewId) + "' is not an instance of ViewGroup.");
         }
         ViewGroup parent = (ViewGroup) parentView;
         View view = fm.createView(fragment, fragment.getLayoutInflater(), parent);
@@ -66,7 +66,7 @@ public class LayoutKey implements SimpleFragmentContainerKey {
 
     @Override
     public void detach(SimpleFragmentContainer container, View rootView, SimpleFragment fragment) {
-        SimpleFragmentManager fm = container.getFragmentManager();
+        SimpleFragmentManager fm = container.getSimpleFragmentManager();
         ViewGroup parentView = (ViewGroup) rootView.findViewById(viewId);
         View view = fm.destroyView(fragment);
         parentView.removeView(view);

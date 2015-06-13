@@ -54,7 +54,7 @@ public class MainActivity extends SimpleFragmentAppCompatActivity {
 
     private class Adapter extends SimpleFragmentPagerAdapter {
         public Adapter() {
-            super(MainActivity.this, getLayoutInflater());
+            super(MainActivity.this);
         }
 
         @Override

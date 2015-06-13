@@ -1,5 +1,6 @@
 package me.tatarka.simplefragment.test;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Parcelable;
 import android.view.LayoutInflater;
@@ -26,7 +27,7 @@ import static org.mockito.Mockito.when;
 @RunWith(CustomRobolectricRunner.class) // Robolectric needed to not crash on Bundle usage.
 public class SimpleFragmentManagerTest {
     @Mock
-    Context context;
+    Activity activity;
     @Mock
     LayoutInflater layoutInflater;
 
@@ -38,7 +39,7 @@ public class SimpleFragmentManagerTest {
 
     @Test
     public void testCreateInstance() {
-        SimpleFragmentManager manager = new SimpleFragmentManager(context);
+        SimpleFragmentManager manager = new SimpleFragmentManager(activity);
         SimpleFragmentIntent intent = SimpleFragmentIntent.of(TestSimpleFragment.class);
         SimpleFragment fragment = manager.create(intent, new TestKey());
 
@@ -47,7 +48,7 @@ public class SimpleFragmentManagerTest {
 
     @Test
     public void testOnCreateCalled() {
-        SimpleFragmentManager manager = new SimpleFragmentManager(context);
+        SimpleFragmentManager manager = new SimpleFragmentManager(activity);
         SimpleFragmentIntent<TestSimpleFragment> intent = SimpleFragmentIntent.of(TestSimpleFragment.class);
         TestSimpleFragment fragment = manager.create(intent, new TestKey());
 
@@ -56,7 +57,7 @@ public class SimpleFragmentManagerTest {
 
     @Test
     public void testFind() {
-        SimpleFragmentManager manager = new SimpleFragmentManager(context);
+        SimpleFragmentManager manager = new SimpleFragmentManager(activity);
         SimpleFragmentIntent intent = SimpleFragmentIntent.of(TestSimpleFragment.class);
         SimpleFragment fragment = manager.create(intent, new TestKey());
 
@@ -65,7 +66,7 @@ public class SimpleFragmentManagerTest {
 
     @Test
     public void testDestroy() {
-        SimpleFragmentManager manager = new SimpleFragmentManager(context);
+        SimpleFragmentManager manager = new SimpleFragmentManager(activity);
         SimpleFragmentIntent intent = SimpleFragmentIntent.of(TestSimpleFragment.class);
         SimpleFragment fragment = manager.create(intent, new TestKey());
         manager.destroy(fragment);
@@ -77,7 +78,7 @@ public class SimpleFragmentManagerTest {
     public void testAttachFragment() {
         FrameLayout view = mock(FrameLayout.class);
 
-        SimpleFragmentManager manager = new SimpleFragmentManager(context);
+        SimpleFragmentManager manager = new SimpleFragmentManager(activity);
         SimpleFragmentIntent<TestSimpleFragment> intent = SimpleFragmentIntent.of(TestSimpleFragment.class);
         TestSimpleFragment fragment = manager.create(intent, new TestKey());
         manager.createView(fragment, layoutInflater, view);
@@ -89,7 +90,7 @@ public class SimpleFragmentManagerTest {
     public void testDetachFragment() {
         FrameLayout view = mock(FrameLayout.class);
 
-        SimpleFragmentManager manager = new SimpleFragmentManager(context);
+        SimpleFragmentManager manager = new SimpleFragmentManager(activity);
         SimpleFragmentIntent<TestSimpleFragment> intent = SimpleFragmentIntent.of(TestSimpleFragment.class);
         TestSimpleFragment fragment = manager.create(intent, new TestKey());
         manager.createView(fragment, layoutInflater, view);
@@ -100,18 +101,18 @@ public class SimpleFragmentManagerTest {
 
     @Test
     public void testConfigurationChange() {
-        SimpleFragmentManager manager = new SimpleFragmentManager(context);
+        SimpleFragmentManager manager = new SimpleFragmentManager(activity);
         SimpleFragmentIntent<TestSimpleFragment> intent = SimpleFragmentIntent.of(TestSimpleFragment.class);
         SimpleFragment fragment = manager.create(intent, new TestKey());
         manager.clearConfigurationState();
-        manager.restoreConfigurationState(context);
+        manager.restoreConfigurationState(activity);
 
         assertThat(manager.find(new TestKey())).isSameAs(fragment);
     }
 
     @Test
     public void testSaveState() {
-        SimpleFragmentManager manager = new SimpleFragmentManager(context);
+        SimpleFragmentManager manager = new SimpleFragmentManager(activity);
         SimpleFragmentIntent<TestSimpleFragment> intent = SimpleFragmentIntent.of(TestSimpleFragment.class);
         TestSimpleFragment fragment = manager.create(intent, new TestKey());
         manager.saveState();
@@ -121,11 +122,11 @@ public class SimpleFragmentManagerTest {
 
     @Test
     public void testRestoreState() {
-        SimpleFragmentManager manager = new SimpleFragmentManager(context);
+        SimpleFragmentManager manager = new SimpleFragmentManager(activity);
         SimpleFragmentIntent intent = SimpleFragmentIntent.of(TestSimpleFragment.class);
         manager.create(intent, new TestKey());
         Parcelable state = manager.saveState();
-        manager = new SimpleFragmentManager(context);
+        manager = new SimpleFragmentManager(activity);
         manager.restoreState(state);
 
         assertThat(manager.getFragments()).hasOnlyElementsOfType(TestSimpleFragment.class);

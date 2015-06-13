@@ -1,5 +1,6 @@
 package me.tatarka.simplefragment.test;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Parcelable;
 import android.support.v4.view.PagerAdapter;
@@ -15,6 +16,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.tatarka.simplefragment.SimpleFragmentContainer;
 import me.tatarka.simplefragment.SimpleFragmentIntent;
 import me.tatarka.simplefragment.SimpleFragmentManager;
 import me.tatarka.simplefragment.widget.SimpleFragmentPagerAdapter;
@@ -33,20 +35,22 @@ import static org.mockito.Mockito.when;
 @RunWith(CustomRobolectricRunner.class) // Robolectric needed to not crash on Bundle usage.
 public class SimpleFragmentPagerAdapterTest {
     @Mock
-    Context context;
+    Activity activity;
     @Mock
     LayoutInflater layoutInflater;
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
+        when(activity.getLayoutInflater()).thenReturn(layoutInflater);
         when(layoutInflater.cloneInContext(any(Context.class))).thenReturn(layoutInflater);
     }
 
     @Test
     public void createFragmentPage() {
-        final SimpleFragmentManager manager = new SimpleFragmentManager(context);
-        SimpleFragmentPagerAdapter adapter = new SimpleFragmentPagerAdapter(manager, layoutInflater) {
+        SimpleFragmentManager manager = new SimpleFragmentManager(activity);
+        SimpleFragmentContainer container = new SimpleFragmentContainer(manager, null);
+        SimpleFragmentPagerAdapter adapter = new SimpleFragmentPagerAdapter(container) {
             @Override
             public SimpleFragmentIntent<?> getItem(int position) {
                 return SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 1);
@@ -65,8 +69,9 @@ public class SimpleFragmentPagerAdapterTest {
 
     @Test
     public void recreateFragmentPageOnConfigurationChange() {
-        final SimpleFragmentManager manager = new SimpleFragmentManager(context);
-        PagerAdapter adapter = new SimpleFragmentPagerAdapter(manager, layoutInflater) {
+        SimpleFragmentManager manager = new SimpleFragmentManager(activity);
+        SimpleFragmentContainer container = new SimpleFragmentContainer(manager, null);
+        PagerAdapter adapter = new SimpleFragmentPagerAdapter(container) {
             @Override
             public SimpleFragmentIntent<?> getItem(int position) {
                 return SimpleFragmentIntent.of(TestSimpleFragment.class);
@@ -81,8 +86,8 @@ public class SimpleFragmentPagerAdapterTest {
         Object item = adapter.instantiateItem(parent, 0);
         Parcelable adapterState = adapter.saveState();
         manager.clearConfigurationState();
-        manager.restoreConfigurationState(context);
-        PagerAdapter newAdapter = new SimpleFragmentPagerAdapter(manager, layoutInflater) {
+        manager.restoreConfigurationState(activity);
+        PagerAdapter newAdapter = new SimpleFragmentPagerAdapter(container) {
             @Override
             public SimpleFragmentIntent<?> getItem(int position) {
                 return SimpleFragmentIntent.of(TestSimpleFragment.class);
@@ -102,10 +107,11 @@ public class SimpleFragmentPagerAdapterTest {
 
     @Test
     public void destroyFragmentWhenNotifyRemoved() {
-        final SimpleFragmentManager manager = new SimpleFragmentManager(context);
+        final SimpleFragmentManager manager = new SimpleFragmentManager(activity);
+        SimpleFragmentContainer container = new SimpleFragmentContainer(manager, null);
         final List<SimpleFragmentIntent> fragments = new ArrayList<>();
         fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class));
-        PagerAdapter adapter = new SimpleFragmentPagerAdapter(manager, layoutInflater) {
+        PagerAdapter adapter = new SimpleFragmentPagerAdapter(container) {
             @Override
             public SimpleFragmentIntent<?> getItem(int position) {
                 return fragments.get(position);
@@ -126,10 +132,11 @@ public class SimpleFragmentPagerAdapterTest {
 
     @Test
     public void addNewFragmentOnNotifyAdd() {
-        final SimpleFragmentManager manager = new SimpleFragmentManager(context);
+        final SimpleFragmentManager manager = new SimpleFragmentManager(activity);
+        SimpleFragmentContainer container = new SimpleFragmentContainer(manager, null);
         final List<SimpleFragmentIntent> fragments = new ArrayList<>();
         fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 1));
-        SimpleFragmentPagerAdapter adapter = new SimpleFragmentPagerAdapter(manager, layoutInflater) {
+        SimpleFragmentPagerAdapter adapter = new SimpleFragmentPagerAdapter(container) {
             @Override
             public SimpleFragmentIntent<?> getItem(int position) {
                 return fragments.get(position);
@@ -152,11 +159,12 @@ public class SimpleFragmentPagerAdapterTest {
 
     @Test
     public void tracksChangingPositionsOfFragmentIntents() {
-        final SimpleFragmentManager manager = new SimpleFragmentManager(context);
+        final SimpleFragmentManager manager = new SimpleFragmentManager(activity);
+        SimpleFragmentContainer container = new SimpleFragmentContainer(manager, null);
         final List<SimpleFragmentIntent> fragments = new ArrayList<>();
         fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 1));
         fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 2));
-        SimpleFragmentPagerAdapter adapter = new SimpleFragmentPagerAdapter(manager, layoutInflater) {
+        SimpleFragmentPagerAdapter adapter = new SimpleFragmentPagerAdapter(container) {
             @Override
             public SimpleFragmentIntent<?> getItem(int position) {
                 return fragments.get(position);
@@ -179,11 +187,12 @@ public class SimpleFragmentPagerAdapterTest {
 
     @Test
     public void moveAndReplaceFragmentAtPosition() {
-        final SimpleFragmentManager manager = new SimpleFragmentManager(context);
+        final SimpleFragmentManager manager = new SimpleFragmentManager(activity);
+        SimpleFragmentContainer container = new SimpleFragmentContainer(manager, null);
         final List<SimpleFragmentIntent> fragments = new ArrayList<>();
         fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 1));
         fragments.add(SimpleFragmentIntent.of(TestSimpleFragment.class).putExtra("test", 2));
-        SimpleFragmentPagerAdapter adapter = new SimpleFragmentPagerAdapter(manager, layoutInflater) {
+        SimpleFragmentPagerAdapter adapter = new SimpleFragmentPagerAdapter(container) {
             @Override
             public SimpleFragmentIntent<?> getItem(int position) {
                 return fragments.get(position);
