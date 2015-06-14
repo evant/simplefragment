@@ -129,16 +129,17 @@ public class SimpleFragmentManager implements SimpleFragmentManagerProvider {
     }
 
     /**
-     * Finds a {@code SimpleFragment} attached to the given view id.
+     * Finds a {@code SimpleFragment} attached to the given key.
      *
-     * @param viewId The view id to search with.
+     * @param key The key to search with.
      * @return The fragment or null if it cannot be found.
      */
-    public SimpleFragment find(SimpleFragmentContainerKey key) {
+    @SuppressWarnings("unchecked")
+    public <T extends SimpleFragment> T find(SimpleFragmentContainerKey key) {
         for (int i = 0; i < attachedKeys.size(); i++) {
             SimpleFragmentContainerKey testKey = attachedKeys.get(i);
             if (testKey.matches(key)) {
-                return stateManager.find(testKey);
+                return (T) stateManager.find(testKey);
             }
         }
         return null;

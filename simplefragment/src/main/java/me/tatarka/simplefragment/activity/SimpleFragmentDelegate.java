@@ -175,14 +175,9 @@ public class SimpleFragmentDelegate implements SimpleFragmentManagerProvider, La
     }
 
     @TargetApi(16)
-    public void startActivityForResult(Intent intent, int requestCode, @Nullable Bundle options) {
+    public void checkStartActivityForResult(Intent intent, int requestCode, @Nullable Bundle options) {
         if (requestCode != -1 && (requestCode & 0xffff0000) != 0) {
             throw new IllegalArgumentException("Can only use lower 16 bits for requestCode");
-        }
-        if (Build.VERSION.SDK_INT >= 16) {
-            activity.startActivityForResult(intent, requestCode, options);
-        } else {
-            activity.startActivityForResult(intent, requestCode);
         }
     }
 

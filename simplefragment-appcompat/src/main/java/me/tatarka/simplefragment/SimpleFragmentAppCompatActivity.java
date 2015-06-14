@@ -366,28 +366,6 @@ public class SimpleFragmentAppCompatActivity extends Activity implements SimpleF
     }
 
     @Override
-    public SimpleFragmentManager getSimpleFragmentManager() {
-        return getSimpleFragmentDelegate().getSimpleFragmentManager();
-    }
-
-    /**
-     * @return The {@link AppCompatDelegate} being used by this Activity.
-     */
-    public AppCompatDelegate getAppCompatDelegate() {
-        if (appCompatDelegate == null) {
-            appCompatDelegate = AppCompatDelegate.create(this, this);
-        }
-        return appCompatDelegate;
-    }
-
-    public SimpleFragmentDelegate getSimpleFragmentDelegate() {
-        if (simpleFragmentDelegate == null) {
-            simpleFragmentDelegate = SimpleFragmentDelegate.create(this);
-        }
-        return simpleFragmentDelegate;
-    }
-
-    @Override
     public void startActivityFromFragment(SimpleFragment fragment, Intent intent, int requestCode, @Nullable Bundle options) {
         int maskedRequestCode = getSimpleFragmentDelegate().getMaskedRequestCode(fragment, requestCode);
         if (Build.VERSION.SDK_INT >= 16) {
@@ -399,17 +377,41 @@ public class SimpleFragmentAppCompatActivity extends Activity implements SimpleF
 
     @Override
     public void startActivityForResult(Intent intent, int requestCode) {
-        getSimpleFragmentDelegate().startActivityForResult(intent, requestCode, null);
+        getSimpleFragmentDelegate().checkStartActivityForResult(intent, requestCode, null);
+        super.startActivityForResult(intent, requestCode);
     }
 
     @Override
     public void startActivityForResult(Intent intent, int requestCode, Bundle options) {
-        getSimpleFragmentDelegate().startActivityForResult(intent, requestCode, options);
+        getSimpleFragmentDelegate().checkStartActivityForResult(intent, requestCode, options);
+        super.startActivityForResult(intent, requestCode, options);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         getSimpleFragmentDelegate().onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public SimpleFragmentManager getSimpleFragmentManager() {
+        return getSimpleFragmentDelegate().getSimpleFragmentManager();
+    }
+
+    /**
+     * @return The {@link AppCompatDelegate} being used by this Activity.
+     */
+    private AppCompatDelegate getAppCompatDelegate() {
+        if (appCompatDelegate == null) {
+            appCompatDelegate = AppCompatDelegate.create(this, this);
+        }
+        return appCompatDelegate;
+    }
+
+    private SimpleFragmentDelegate getSimpleFragmentDelegate() {
+        if (simpleFragmentDelegate == null) {
+            simpleFragmentDelegate = SimpleFragmentDelegate.create(this);
+        }
+        return simpleFragmentDelegate;
     }
 
     /**

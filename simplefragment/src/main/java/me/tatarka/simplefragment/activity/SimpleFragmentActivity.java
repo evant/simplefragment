@@ -86,12 +86,14 @@ public class SimpleFragmentActivity extends Activity implements SimpleFragmentMa
 
     @Override
     public void startActivityForResult(Intent intent, int requestCode) {
-        getSimpleFragmentDelegate().startActivityForResult(intent, requestCode, null);
+        getSimpleFragmentDelegate().checkStartActivityForResult(intent, requestCode, null);
+        super.startActivityForResult(intent, requestCode);
     }
 
     @Override
     public void startActivityForResult(Intent intent, int requestCode, Bundle options) {
-        getSimpleFragmentDelegate().startActivityForResult(intent, requestCode, options);
+        getSimpleFragmentDelegate().checkStartActivityForResult(intent, requestCode, options);
+        super.startActivityForResult(intent, requestCode, options);
     }
 
     @Override
@@ -111,7 +113,7 @@ public class SimpleFragmentActivity extends Activity implements SimpleFragmentMa
         return getSimpleFragmentDelegate().getSimpleFragmentManager();
     }
 
-    public SimpleFragmentDelegate getSimpleFragmentDelegate() {
+    private SimpleFragmentDelegate getSimpleFragmentDelegate() {
         if (delegate == null) {
             delegate = SimpleFragmentDelegate.create(this);
         }
