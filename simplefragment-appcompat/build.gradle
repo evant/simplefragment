@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'signing'
 
 android {
     compileSdkVersion 22
@@ -23,3 +24,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:22.2.0'
     compile project(':simplefragment')
 }
+
+apply from: '../publish.gradle'
