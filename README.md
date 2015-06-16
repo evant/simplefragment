@@ -17,7 +17,7 @@ compile 'me.tatarka.simplefragment:simplefragment-appcompat:0.1'
 ## Features
 - Survive orientation changes
 - First-class nesting
-- Immedatly added to the view when they are created
+- Immediately added to the view when they are created
 - Don't have to worry about `commitAllowingStateLoss()`
 - Fails fast if you attempt to add the same fragment twice
 - Many of the same features as native fragments: view paging, inflation from layouts, `startActivityForResult()`, back stack, dialogs
@@ -70,7 +70,8 @@ public class HelloWorldFragment extends SimpleFragment {
   }
   
   @Override
-  public void onViewDestroyed() {
+  public void onViewDestroyed(View view) {
+    super.onViewDestroyed(view);
     helloTextView = null;
   }
 }
