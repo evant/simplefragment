@@ -1,5 +1,5 @@
 # SimpleFragment
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/me.tatarka/simplefragment/simplefragment/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/me.tatarka/simplefragment/simplefragment)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/me.tatarka.simplefragment/simplefragment/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/me.tatarka.simplefragment/simplefragment)
 
 A fragment-like abstraction for Android that is easier to use and understand
 
