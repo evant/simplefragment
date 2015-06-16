@@ -1,7 +1,18 @@
 # SimpleFragment
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/me.tatarka/simplefragment/simplefragment/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/me.tatarka/simplefragment/simplefragment)
+
 A fragment-like abstraction for Android that is easier to use and understand
 
 The purpose of this library is to build a better foundation for working with the controller layer in Android-style MVC. If you have ever worked with Fragments, you know that they feel more complicated than they need to be AND sometimes have unexpected behavior. This is especially true when you try to nest them. SimpleFragment provides an api that is very similar to native fragments but is more powerful _and_ easier to understand.
+
+## Download
+```groovy
+compile 'me.tatarka.simplefragment:simplefragment:0.1'
+```
+or if you are using AppCompat
+```groovy
+compile 'me.tatarka.simplefragment:simplefragment-appcompat:0.1'
+```
 
 ## Features
 - Survive orientation changes
@@ -175,3 +186,19 @@ A good way to propigate events from the dialog (or any fragment) back up to it's
 
 ### Start Activity For Result
 Not much to say here, just use `startActivityForResult()` on the `SimpleFragment` instead of the activity and the result will be sent back down to your fragment. Works with nesting too!
+
+## License
+
+    Copyright 2015 Evan Tatarka
+    
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+    
+       http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
