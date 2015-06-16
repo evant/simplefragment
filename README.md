@@ -71,7 +71,6 @@ public class HelloWorldFragment extends SimpleFragment {
   
   @Override
   public void onViewDestroyed(View view) {
-    super.onViewDestroyed(view);
     helloTextView = null;
   }
 }
