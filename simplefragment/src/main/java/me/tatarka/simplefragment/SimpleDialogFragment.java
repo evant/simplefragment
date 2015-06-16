@@ -33,11 +33,13 @@ public abstract class SimpleDialogFragment extends SimpleFragment {
     }
 
     @Override
+    @CallSuper
     public void onSave(@NonNull Bundle state) {
         state.putParcelable(STATE, new State(isDialogShown));
     }
 
     @Override
+    @CallSuper
     public void onViewCreated(@NonNull View view) {
         dialog = onCreateDialog(view);
         if (isDialogShown) {
@@ -46,6 +48,7 @@ public abstract class SimpleDialogFragment extends SimpleFragment {
     }
 
     @Override
+    @CallSuper
     public void onViewDestroyed(@NonNull View view) {
         if (dialog != null) {
             // Clear the dismiss listener so that the fragment won't be destroyed when we dismiss it.
@@ -59,6 +62,7 @@ public abstract class SimpleDialogFragment extends SimpleFragment {
         return dialog;
     }
 
+    @CallSuper
     public void show() {
         if (dialog != null) {
             dialog.show();
